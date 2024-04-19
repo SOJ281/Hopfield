@@ -20,7 +20,9 @@ class Hopfield:
         #w(ij) ​= ∑p​[s(i)​(p) * s(j)​(p)]
         for i in range(self.itemsLen):
             self.weights += np.outer(inputs[i], inputs[i])
-        
+
+        for i in range(self.n):
+            self.weights[i][i] = 0
         # notsure if this step is necessary
         self.weights = self.weights/self.itemsLen
 
@@ -91,7 +93,7 @@ class DAMDiscreteHopfield:
             predicted.append(vals)
         return predicted
     
-    #-∑F(state * X[i])
+    #-∑F(state * x)
     def energy(self, state):
         x = self.X@state
         return -self.F(x, 2).sum()

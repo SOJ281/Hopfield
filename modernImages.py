@@ -115,8 +115,8 @@ for file in listdir("distinct"):
     pics.append(linear)
 
 
-corrupted = [randomFlipping(d, 0.75) for d in pics]
-#corrupted = [highBlocking(d, 0.4) for d in pics]
+#corrupted = [randomFlipping(d, 0.85) for d in pics]
+corrupted = [highBlocking(d, 0.4) for d in pics]
 
 hoppy = ContinuousHopfield(pics)
 

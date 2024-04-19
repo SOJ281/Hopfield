@@ -75,7 +75,7 @@ def resultsPlotter(original, iterations):
 
 
     plt.tight_layout()
-    plt.savefig("result.png")
+    plt.savefig("colourResult.png")
     plt.show()
 
 print("Loading Images")
@@ -100,9 +100,9 @@ band0 = np.array(band0)
 band1 = np.array(band1)
 band2 = np.array(band2)
 
-corrupted0 = [randomFlipping(d, 0.85) for d in band0]
-corrupted1 = [randomFlipping(d, 0.85) for d in band1]
-corrupted2 = [randomFlipping(d, 0.85) for d in band2]
+corrupted0 = [randomFlipping(d, 0.95) for d in band0]
+corrupted1 = [randomFlipping(d, 0.95) for d in band1]
+corrupted2 = [randomFlipping(d, 0.95) for d in band2]
 
 
 

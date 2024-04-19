@@ -113,7 +113,7 @@ def resultsPlotter(original, iterations):
 
 
     plt.tight_layout()
-    plt.savefig("result.png")
+    plt.savefig("DAMResult.png")
     plt.show()
 
 
@@ -130,7 +130,7 @@ for file in listdir("distinct"):
     linear = preprocessing(rgb2gray(foo))
     pics.append(linear)
     picNumber+=1
-    if picNumber > 5:
+    if picNumber > 6:
         break
 
 print("Corrupting Images")
@@ -138,8 +138,8 @@ print("Corrupting Images")
 #corrupted = [randomFlipping(d, 0.4) for d in pics]
 corrupted = [highBlocking(d, 0.4) for d in pics]
            
-hoppy = Hopfield(pics)
-#hoppy = DAMDiscreteHopfield(pics)
+#hoppy = Hopfield(pics)
+hoppy = DAMDiscreteHopfield(pics)
 
 
 predictions = []
