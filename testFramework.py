@@ -29,7 +29,7 @@ print("============================================")
 
 patternPoints = []
 neuronPoints = []
-for l in range(10, 70, 5): ## no. of Patterns
+for l in range(10, 100, 5): ## no. of Patterns
     counter = 0
     for i in range(40, 100000, 20): # no. of Neurons
         patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
@@ -39,7 +39,7 @@ for l in range(10, 70, 5): ## no. of Patterns
 
         predictions = []
         for p in range(len(corrupted)):
-            predictions.append(hoppy.predict(corrupted[p], 1)[-1])
+            predictions.append(hoppy.predict(corrupted[p], 3)[-1])
         
         #print(i, ":", (patterns==predictions).sum()/(l*i))
         #print((patterns==predictions).sum()/(l*i))
@@ -50,23 +50,25 @@ for l in range(10, 70, 5): ## no. of Patterns
             neuronPoints.append(i)
             print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
 
-        if (counter > 2):
+        if (counter > 5):
             break
 
-fig, ax = plt.subplots()
-ax.scatter(patternPoints, neuronPoints)
-plt.show()
-
+#plt.title("Hopfield")
+#plt.xlabel("pattern number")
+#plt.ylabel("Neurons")
+fig, ax = plt.subplots(2,2)
+ax[0, 0].scatter(patternPoints, neuronPoints)
+ax[0, 0].set_title("Hopfield") 
 
 print("============================================")
 print("Dense Associative Memory")
 print("============================================")
 
-patternPoints = []
-neuronPoints = []
-for l in range(10, 70, 5): ## no. of Patterns
+dpatternPoints = []
+dneuronPoints = []
+for l in range(10, 100, 5): # no. of Patterns
     counter = 0
-    for i in range(40, 3000, 20): # no. of Neurons
+    for i in range(40, 100000, 20): # no. of Neurons
         patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
         hoppy = DAMDiscreteHopfield(patterns)
 
@@ -81,15 +83,20 @@ for l in range(10, 70, 5): ## no. of Patterns
         #print(l)
         if ((patterns==predictions).sum()/(l*i) == 1.0):
             counter +=1
-            patternPoints.append(l)
-            neuronPoints.append(i)
+            dpatternPoints.append(l)
+            dneuronPoints.append(i)
             print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
 
-        if (counter > 2):
+        if (counter > 5):
             break
 
-fig, ax = plt.subplots()
-ax.scatter(patternPoints, neuronPoints)
+#plt.title("DAM")
+#plt.xlabel("pattern number")
+#plt.ylabel("Neurons")
+#figb, axb = plt.subplots()
+ax[1, 0].scatter(dpatternPoints, dneuronPoints)
+ax[1, 0].set_title("DAM") 
+#axb.title("DAM")
 plt.show()
 
 
