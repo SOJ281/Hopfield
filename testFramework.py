@@ -29,8 +29,9 @@ print("============================================")
 
 patternPoints = []
 neuronPoints = []
-for l in range(10, 50, 10): ## no. of Patterns
-    for i in range(40, 2400, 40): # no. of Neurons
+for l in range(10, 70, 5): ## no. of Patterns
+    counter = 0
+    for i in range(40, 100000, 20): # no. of Neurons
         patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
         hoppy = Hopfield(patterns)
 
@@ -44,9 +45,13 @@ for l in range(10, 50, 10): ## no. of Patterns
         #print((patterns==predictions).sum()/(l*i))
         #print(l)
         if ((patterns==predictions).sum()/(l*i) == 1.0):
+            counter +=1
             patternPoints.append(l)
             neuronPoints.append(i)
             print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
+
+        if (counter > 2):
+            break
 
 fig, ax = plt.subplots()
 ax.scatter(patternPoints, neuronPoints)
@@ -59,8 +64,9 @@ print("============================================")
 
 patternPoints = []
 neuronPoints = []
-for l in range(10, 70, 10): ## no. of Patterns
-    for i in range(40, 1600, 40): # no. of Neurons
+for l in range(10, 70, 5): ## no. of Patterns
+    counter = 0
+    for i in range(40, 3000, 20): # no. of Neurons
         patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
         hoppy = DAMDiscreteHopfield(patterns)
 
@@ -74,14 +80,16 @@ for l in range(10, 70, 10): ## no. of Patterns
         #print((patterns==predictions).sum()/(l*i))
         #print(l)
         if ((patterns==predictions).sum()/(l*i) == 1.0):
+            counter +=1
             patternPoints.append(l)
             neuronPoints.append(i)
             print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
 
+        if (counter > 2):
+            break
+
 fig, ax = plt.subplots()
-
 ax.scatter(patternPoints, neuronPoints)
-
 plt.show()
 
 
