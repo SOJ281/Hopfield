@@ -1,6 +1,8 @@
 from hopfield import Hopfield, ContinuousHopfield, DAMDiscreteHopfield
 import numpy as np
 import random
+import matplotlib.pyplot as plt
+import numpy as np
 
 #Randomly inverts data
 def randomFlipping(input, flipCount):
@@ -25,23 +27,67 @@ print("============================================")
 print("Hopfield")
 print("============================================")
 
-for i in range(40, 800, 40):
-    patterns = np.array([random.choices([-1,1], k=1000) for l in range(i)])
-    hoppy = Hopfield(patterns)
+patternPoints = []
+neuronPoints = []
+for l in range(10, 50, 10): ## no. of Patterns
+    for i in range(40, 2400, 40): # no. of Neurons
+        patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
+        hoppy = Hopfield(patterns)
 
-    corrupted = [highBlocking(d, 0.4) for d in patterns]
+        corrupted = [highBlocking(d, 0.4) for d in patterns]
 
-    predictions = []
-    for l in range(len(corrupted)):
-        predictions.append(hoppy.predict(corrupted[l], 3)[-1])
-    
-    print(i, ":", (patterns==predictions).sum()/(1000*i))
+        predictions = []
+        for p in range(len(corrupted)):
+            predictions.append(hoppy.predict(corrupted[p], 1)[-1])
+        
+        #print(i, ":", (patterns==predictions).sum()/(l*i))
+        #print((patterns==predictions).sum()/(l*i))
+        #print(l)
+        if ((patterns==predictions).sum()/(l*i) == 1.0):
+            patternPoints.append(l)
+            neuronPoints.append(i)
+            print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
+
+fig, ax = plt.subplots()
+ax.scatter(patternPoints, neuronPoints)
+plt.show()
 
 
 print("============================================")
 print("Dense Associative Memory")
 print("============================================")
 
+patternPoints = []
+neuronPoints = []
+for l in range(10, 70, 10): ## no. of Patterns
+    for i in range(40, 1600, 40): # no. of Neurons
+        patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
+        hoppy = DAMDiscreteHopfield(patterns)
+
+        corrupted = [highBlocking(d, 0.4) for d in patterns]
+
+        predictions = []
+        for p in range(len(corrupted)):
+            predictions.append(hoppy.predict(corrupted[p], 1)[-1])
+        
+        #print(i, ":", (patterns==predictions).sum()/(l*i))
+        #print((patterns==predictions).sum()/(l*i))
+        #print(l)
+        if ((patterns==predictions).sum()/(l*i) == 1.0):
+            patternPoints.append(l)
+            neuronPoints.append(i)
+            print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
+
+fig, ax = plt.subplots()
+
+ax.scatter(patternPoints, neuronPoints)
+
+plt.show()
+
+
+
+
+"""
 #for i in range(40, 800, 40):
 for i in range(2, 40, 4):
     patterns = np.array([random.choices([-1,1], k=128) for l in range(i)])
@@ -54,3 +100,4 @@ for i in range(2, 40, 4):
         predictions.append(hoppy.predict(corrupted[l], 3)[-1])
     
     print(i, ":", (patterns==predictions).sum()/(1000*i))
+"""

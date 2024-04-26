@@ -16,7 +16,7 @@ from torch import nn, optim
 from torch import optim
 
 import csv
-
+from tqdm import tqdm
 
 class Hopfield(nn.Module):
     #Initialisation function, gets weights for bipolar patterns
@@ -86,6 +86,61 @@ class DAMDiscreteHopfield(nn.Module):
         x[x < 0] = 0.
         return x**n
     
+class DAM(nn.Module):
+    #based on 'Dense Associative Memory for Pattern Recognition' paper
+    #Initialisation function
+    def __init__(self, inputs):
+        super().__init__()
+        self.n = len(inputs[0]) #no. of neurons
+        self.K = len(inputs) # no. of patterns
+        self.Weights = nn.Parameter(torch.Tensor(np.copy(inputs)))
+        
+    #Update rule
+    def forward(self, input):
+        valList = np.arange(0, self.n)
+        #random.shuffle(valList)
+        vals = input.detach().clone()
+        #prev = self.energy(vals)
+        for i in valList:
+            """
+            total = 0
+            for u in range(self.K):
+                pos = self.Weights[u][i].detach().clone()
+                for j in range(len(self.Weights[u])):
+                    if u != i:
+                        pos += self.Weights[u][j]*vals[j]
+                pos = self.F(pos, 2)
+
+                neg = -self.Weights[u][i].detach().clone()
+                for j in range(len(self.Weights[u])):
+                    if u != i:
+                        neg += self.Weights[u][j]*vals[j]
+                neg = self.F(neg, 2)
+                total += (pos - neg)
+            """
+            neg_vals = vals.detach().clone()
+            neg_vals[i] *= -1
+            neg_vals = self.energy(neg_vals)
+
+            pos_vals = vals.detach().clone()
+            pos_vals = self.energy(pos_vals)
+
+
+            #vals[i] = torch.sign(pos_vals - neg_vals)
+            vals[i] = torch.tanh(pos_vals - neg_vals)
+        #print("SHED")
+        return vals
+    
+    #-∑F(state * x)
+    def energy(self, state):
+        x = torch.matmul(self.Weights, state)
+        return -self.F(x, 2).sum()
+    
+    #F (x) = {if x > 0, x^n, else 0}
+    def F(self, x, n):
+        #print(x)
+        x[x < 0] = 0.
+        return x**n
 
 def reshape(data):
     dim = int(np.sqrt(len(data)))
@@ -97,9 +152,10 @@ def reshape(data):
 class myModel: 
     def __init__(self, inputData, learningRate = 0.001, momentum = 0.9, loss_fn = nn.CrossEntropyLoss()):
         self.net = nn.Sequential(
-            Hopfield(inputData),
+            #Hopfield(inputData),
             #DAMDiscreteHopfield(inputData),
-            nn.ReLU(),
+            DAM(inputData),
+            #nn.ReLU(),
             nn.Linear(len(inputData[0]), 10)
         )
             
@@ -136,6 +192,7 @@ class myModel:
         trainingLoss = []
         testAcc = []
         testLoss = []
+        best = 0
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          
             running_loss = 0.0                 
@@ -162,34 +219,21 @@ class myModel:
             trainingLoss.append(running_loss/len(trainingData))
             print("Epoch:", epoch)
             print("Train Accuracy:",correct/len(trainingData), "Train Loss:",running_loss/len(trainingData))
-            testacc, testloss = self.testResults(testData, testDataLabels)
-            testAcc.append(testacc)
-            testLoss.append(testloss)
-            print("Test Accuracy:", testacc, "Test Loss:", testloss)
+            testa, testl = self.testResults(testData, testDataLabels)
+            testAcc.append(testa)
+            testLoss.append(testl)
+            print("Test Accuracy:", testa, "Test Loss:", testl)
             print("===========================================================")
-        return trainingAcc, trainingLoss, testAcc, testLoss
+
+            if testAcc[best] < testa:
+                best = epoch
+                
+        return trainingAcc, trainingLoss, testAcc, testLoss, best
     
 from torchvision import datasets, transforms
 train_data = datasets.MNIST("./", train=True, transform=transforms.ToTensor(), download=True)
 
 test_data = datasets.MNIST("./", train=False, transform=transforms.ToTensor(), download=True)
-
-#print(train_data.data)
-#print(train_data.train_labels)
-#vals = []
-#with open("archive/mnist_train.csv") as csvfile:
-#    reader = csv.reader(csvfile) # change contents to floats
-#    for row in reader: # each row is a list
-#        try:
-#          vals.append(row)
-#        except:
-#          pass
-
-#def prepro(img):
-    #print(type(img))
-    #print(img)
-#    return torch.flatten(img/255).float()
-    #return torch.from_numpy(img/255).float()
 
 def prepro(img):
     flatty = torch.flatten(torch.where(img > torch.mean(img.float()), 1, -1))
@@ -199,26 +243,35 @@ trainingData = train_data.data[:5000]
 #trainingLabels = torch.from_numpy(np.array([int(i[0]) for i in trainingData])).type(torch.LongTensor)
 trainingLabels = train_data.train_labels
 trainingData = [prepro(i) for i in trainingData]
-#valsTest = []
-#with open("archive/mnist_test.csv") as csvfile:
-#    reader = csv.reader(csvfile) # change contents to floats
-#    for row in reader: # each row is a list
-#        try:
-#          valsTest.append(row)
-#        except:
-#          pass
 
-valsTest = test_data.data
+valsTest = test_data.data[:1000]
 testLabels = test_data.test_labels
 #testLabels = torch.from_numpy(np.array([int(i[0]) for i in valsTest])).type(torch.LongTensor)
 testData = [prepro(i) for i in valsTest]
 
-epochs = 30
-#print("SHED")
-mlp = myModel(trainingData, learningRate = 0.001, momentum = 0.9, loss_fn = nn.CrossEntropyLoss())
-print("Training")
-trainingAcc, trainingLoss, testAcc, testLoss = mlp.eval(epochs, trainingData, trainingLabels, testData, testLabels)
+epochs = 25
+"""
+learningRates=[0.001, 0.01]
+momentum=[0.2, 0.5, 0.9]
+nesterov = [True, False]
 
+import itertools
+for lr, mom in list(itertools.product(learningRates, momentum)):
+    print("Training")
+    mlp = myModel(trainingData[:10], learningRate = lr, momentum = mom, loss_fn = nn.CrossEntropyLoss())
+    trainingAcc, trainingLoss, testAcc, testLoss, best = mlp.eval(epochs, trainingData, trainingLabels, testData, testLabels)
+    print("Best:", (lr, mom), "Values:")
+    print("Training:", trainingAcc[best], trainingLoss[best])
+    print("Test:", testAcc[best], testLoss[best])
+    print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+"""
+
+print("Training")
+mlp = myModel(trainingData[:100], learningRate = 0.001, momentum = 0.5, loss_fn = nn.CrossEntropyLoss())
+trainingAcc, trainingLoss, testAcc, testLoss, best = mlp.eval(epochs, trainingData, trainingLabels, testData, testLabels)
+print("Training:", trainingAcc[best], trainingLoss[best])
+print("Test:", testAcc[best], testLoss[best])
+print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
 epochs = [i+1 for i in range(epochs)]
 

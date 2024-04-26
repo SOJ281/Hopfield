@@ -135,8 +135,8 @@ for file in listdir("distinct"):
 
 print("Corrupting Images")
 
-#corrupted = [randomFlipping(d, 0.4) for d in pics]
-corrupted = [highBlocking(d, 0.4) for d in pics]
+corrupted = [randomFlipping(d, 0.4) for d in pics]
+#corrupted = [highBlocking(d, 0.4) for d in pics]
            
 #hoppy = Hopfield(pics)
 hoppy = DAMDiscreteHopfield(pics)

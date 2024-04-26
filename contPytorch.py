@@ -16,6 +16,7 @@ from torch import nn, optim
 from torch import optim
 
 import csv
+from tqdm import tqdm
     
 #Continuous Hopfield
 #Based on:
@@ -49,10 +50,23 @@ def reshape(data):
 
 class myModel: 
     def __init__(self, inputData, learningRate = 0.001, momentum = 0.9, loss_fn = nn.CrossEntropyLoss()):
+        """
         self.net = nn.Sequential(
             ContinuousHopfield(inputData),
             nn.ReLU(),
             nn.Linear(len(inputData[0]), 10)
+        )
+        """
+
+        self.net = nn.Sequential(
+            #ContinuousHopfield(inputData),
+            ContinuousHopfield(inputData),
+            nn.ReLU(),
+            nn.Linear(28*28, 14*14),
+            nn.ReLU(),
+            nn.Linear(14*14, 7*7),
+            nn.ReLU(),
+            nn.Linear(7*7, 10)
         )
             
         self.loss_fn = loss_fn
@@ -88,6 +102,7 @@ class myModel:
         trainingLoss = []
         testAcc = []
         testLoss = []
+        best = 0
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          
             running_loss = 0.0                 
@@ -112,30 +127,23 @@ class myModel:
 
             trainingAcc.append(correct/len(trainingData))
             trainingLoss.append(running_loss/len(trainingData))
-            print("Epoch:", epoch)
-            print("Train Accuracy:",correct/len(trainingData), "Train Loss:",running_loss/len(trainingData))
-            testacc, testloss = self.testResults(testData, testDataLabels)
-            testAcc.append(testacc)
-            testLoss.append(testloss)
-            print("Test Accuracy:", testacc, "Test Loss:", testloss)
-            print("===========================================================")
-        return trainingAcc, trainingLoss, testAcc, testLoss
+            #print("Epoch:", epoch)
+            #print("Train Accuracy:",correct/len(trainingData), "Train Loss:",running_loss/len(trainingData))
+            testa, testl = self.testResults(testData, testDataLabels)
+            testAcc.append(testa)
+            testLoss.append(testl)
+            #print("Test Accuracy:", testacc, "Test Loss:", testloss)
+            #print("===========================================================")
+
+            if testAcc[best] < testa:
+                best = epoch
+                
+        return trainingAcc, trainingLoss, testAcc, testLoss, best
     
 from torchvision import datasets, transforms
 train_data = datasets.MNIST("./", train=True, transform=transforms.ToTensor(), download=True)
 
 test_data = datasets.MNIST("./", train=False, transform=transforms.ToTensor(), download=True)
-
-#print(train_data.data)
-#print(train_data.train_labels)
-#vals = []
-#with open("archive/mnist_train.csv") as csvfile:
-#    reader = csv.reader(csvfile) # change contents to floats
-#    for row in reader: # each row is a list
-#        try:
-#          vals.append(row)
-#        except:
-#          pass
 
 def prepro(img):
     #print(type(img))
@@ -148,24 +156,36 @@ trainingData = train_data.data[:5000]
 #trainingLabels = torch.from_numpy(np.array([int(i[0]) for i in trainingData])).type(torch.LongTensor)
 trainingLabels = train_data.train_labels
 trainingData = [prepro(i) for i in trainingData]
-#valsTest = []
-#with open("archive/mnist_test.csv") as csvfile:
-#    reader = csv.reader(csvfile) # change contents to floats
-#    for row in reader: # each row is a list
-#        try:
-#          valsTest.append(row)
-#        except:
-#          pass
 
 valsTest = test_data.data
 testLabels = test_data.test_labels
 #testLabels = torch.from_numpy(np.array([int(i[0]) for i in valsTest])).type(torch.LongTensor)
 testData = [prepro(i) for i in valsTest]
 
-epochs = 30
-mlp = myModel(trainingData, learningRate = 0.001, momentum = 0.9, loss_fn = nn.CrossEntropyLoss())
+epochs = 25
+
+"""
+learningRates=[0.001, 0.01]
+momentum=[0.2, 0.5, 0.9]
+nesterov = [True, False]
+
+import itertools
+for lr, mom in list(itertools.product(learningRates, momentum)):
+    print("Training")
+    mlp = myModel(trainingData[:10], learningRate = lr, momentum = mom, loss_fn = nn.CrossEntropyLoss())
+    trainingAcc, trainingLoss, testAcc, testLoss, best = mlp.eval(epochs, trainingData, trainingLabels, testData, testLabels)
+    print("Best:", (lr, mom), "Values:")
+    print("Training:", trainingAcc[best], trainingLoss[best])
+    print("Test:", testAcc[best], testLoss[best])
+    print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+"""
+
 print("Training")
-trainingAcc, trainingLoss, testAcc, testLoss = mlp.eval(epochs, trainingData, trainingLabels, testData, testLabels)
+mlp = myModel(trainingData[:100], learningRate = 0.001, momentum = 0.5, loss_fn = nn.CrossEntropyLoss())
+trainingAcc, trainingLoss, testAcc, testLoss, best = mlp.eval(epochs, trainingData, trainingLabels, testData, testLabels)
+print("Training:", trainingAcc[best], trainingLoss[best])
+print("Test:", testAcc[best], testLoss[best])
+print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
 
 epochs = [i+1 for i in range(epochs)]
@@ -186,18 +206,18 @@ plt.title('Loss')
 plt.legend()
 plt.show()
 
-for i in range(len(trainingData)):
+for i in range(len(testLabels)):
     longest  = 1
-    _, predicted = torch.max(mlp.predict(trainingData[i]).data, 0)
+    _, predicted = torch.max(mlp.predict(valsTest[i]).data, 0)
     print("Predicted:", predicted)
-    print("Actual:", trainingLabels[i])
+    print("Actual:", testLabels[i])
     fig, axarr = plt.subplots(1, 1, figsize=(5, 5))
     axarr.set_title('Originals')
-    axarr.imshow(reshape(trainingData[i]))
+    axarr.imshow(reshape(valsTest[i]))
     axarr.axis('off')
 
     plt.tight_layout()
     plt.show()
 
     if input("Hit y to stop, or anything else to keep going") == 'y':
-        break
+        break     
