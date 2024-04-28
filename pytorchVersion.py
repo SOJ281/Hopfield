@@ -102,22 +102,6 @@ class DAM(nn.Module):
         vals = input.detach().clone()
         #prev = self.energy(vals)
         for i in valList:
-            """
-            total = 0
-            for u in range(self.K):
-                pos = self.Weights[u][i].detach().clone()
-                for j in range(len(self.Weights[u])):
-                    if u != i:
-                        pos += self.Weights[u][j]*vals[j]
-                pos = self.F(pos, 2)
-
-                neg = -self.Weights[u][i].detach().clone()
-                for j in range(len(self.Weights[u])):
-                    if u != i:
-                        neg += self.Weights[u][j]*vals[j]
-                neg = self.F(neg, 2)
-                total += (pos - neg)
-            """
             neg_vals = vals.detach().clone()
             neg_vals[i] *= -1
             neg_vals = self.energy(neg_vals)
@@ -196,7 +180,7 @@ class myModel:
         for epoch in range(nepochs):  # loop over the dataset multiple times
             correct = 0          
             running_loss = 0.0                 
-            for data in range(len(trainingData)):
+            for data in tqdm(range(len(trainingData))):
                 inputs = trainingData[data]
                 labels = trainingDataLabels[data] 
 
@@ -239,17 +223,17 @@ def prepro(img):
     flatty = torch.flatten(torch.where(img > torch.mean(img.float()), 1, -1))
     return flatty.float()
 
-trainingData = train_data.data[:5000]
+trainingData = train_data.data[:1000]
 #trainingLabels = torch.from_numpy(np.array([int(i[0]) for i in trainingData])).type(torch.LongTensor)
 trainingLabels = train_data.train_labels
 trainingData = [prepro(i) for i in trainingData]
 
-valsTest = test_data.data[:1000]
+valsTest = test_data.data[:500]
 testLabels = test_data.test_labels
 #testLabels = torch.from_numpy(np.array([int(i[0]) for i in valsTest])).type(torch.LongTensor)
 testData = [prepro(i) for i in valsTest]
 
-epochs = 25
+epochs = 5
 """
 learningRates=[0.001, 0.01]
 momentum=[0.2, 0.5, 0.9]
@@ -265,9 +249,38 @@ for lr, mom in list(itertools.product(learningRates, momentum)):
     print("Test:", testAcc[best], testLoss[best])
     print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 """
+def draw_weights(synapses, Kx, Ky, err_tr, err_test):
+    fig.clf()
+    ax1 = fig.add_subplot(121)
+    ax2 = fig.add_subplot(122)
+    
+    plt.sca(ax1)
+    yy=0
+    HM=np.zeros((28*Kx,28*Ky))
+    for y in range(Ky):
+        for x in range(Kx):
+            HM[y*28:(y+1)*28,x*28:(x+1)*28]=synapses[yy,:].reshape(28,28)
+            yy += 1
+    nc=np.amax(np.absolute(HM))
+    im=plt.imshow(HM,cmap='bwr',vmin=-nc,vmax=nc)
+    cbar=fig.colorbar(im,ticks=[np.amin(HM), 0, np.amax(HM)])
+    plt.axis('off')
+    cbar.ax.tick_params(labelsize=30) 
+    
+    plt.sca(ax2)
+    plt.ylim((0,100))
+    plt.xlim((0,len(err_tr)+1))
+    ax2.plot(np.arange(1, len(err_tr)+1, 1), err_tr, color='b', linewidth=4)
+    ax2.plot(np.arange(1, len(err_test)+1, 1), err_test, color='r',linewidth=4)
+    ax2.set_xlabel('Number of epochs', size=30)
+    ax2.set_ylabel('Training and test error, %', size=30)
+    ax2.tick_params(labelsize=30)
+
+    plt.tight_layout()
+    fig.canvas.draw()
 
 print("Training")
-mlp = myModel(trainingData[:100], learningRate = 0.001, momentum = 0.5, loss_fn = nn.CrossEntropyLoss())
+mlp = myModel(trainingData[100:], learningRate = 0.001, momentum = 0.5, loss_fn = nn.CrossEntropyLoss())
 trainingAcc, trainingLoss, testAcc, testLoss, best = mlp.eval(epochs, trainingData, trainingLabels, testData, testLabels)
 print("Training:", trainingAcc[best], trainingLoss[best])
 print("Test:", testAcc[best], testLoss[best])

@@ -14,7 +14,7 @@ class Hopfield:
 
         self.n = len(inputs[0]) #no. of neurons
         self.itemsLen = len(inputs) # no. of patterns
-        self.weights = np.empty((self.n,self.n)) #Connection matrix
+        self.weights = np.zeros((self.n,self.n)) #Connection matrix
         self.X = np.array(inputs)
 
         #w(ij) ​= ∑p​[s(i)​(p) * s(j)​(p)]
@@ -46,6 +46,40 @@ class Hopfield:
             s = st
             predicted.append(newVal)
         return predicted
+    
+    #Prediction function
+    #yini ​​= xi​ + ∑j​[yj * ​wji​]
+    #yi = yini{1 if > =0, else 0}
+    #Iterates until hits iteration count or energy minimized
+    def predictAsyn(self, input, iterations, theta = 0.0):
+        #print("Predictions")
+
+        predicted = [np.copy(input)]
+        
+        for l in range(iterations):
+            valList = np.arange(0, self.n)
+            random.shuffle(valList)
+
+
+            vals = predicted[l].copy()
+            noFlip = True
+
+            prev = self.energy(vals)
+
+            for i in valList:
+                new_vals = vals.copy()
+                new_vals[i] *= -1
+
+                current = self.energy(new_vals, theta)
+
+                if (current - prev) < 0:
+                    prev = self.energy(new_vals, theta)
+                    vals[i] = new_vals[i]
+                    noFlip = False
+            if noFlip:
+                break
+            predicted.append(vals)
+        return predicted
 
     #E = 0.5 * ∑i​∑j[​wij​ * vi * ​vj] ​+ ∑i[​θi​ * vi]
     def energy(self, state, theta = 0.0):
@@ -64,7 +98,7 @@ class DAMDiscreteHopfield:
     #Update rule
     #Asynchronously flips all bits randomly
     #Keeps flipped bit if energy is lowered
-    def predict(self, input, iterations = 5):
+    def predict(self, input, iterations = 5, power = 2):
 
         predicted = [np.copy(input)]
         
@@ -76,16 +110,16 @@ class DAMDiscreteHopfield:
             vals = predicted[l].copy()
             noFlip = True
 
-            prev = self.energy(vals)
+            prev = self.energy(vals, power)
 
             for i in valList:
                 new_vals = vals.copy()
                 new_vals[i] *= -1
 
-                current = self.energy(new_vals)
+                current = self.energy(new_vals, power)
 
                 if (current - prev) < 0:
-                    prev = self.energy(new_vals)
+                    prev = self.energy(new_vals, power)
                     vals[i] = new_vals[i]
                     noFlip = False
             if noFlip:
@@ -94,9 +128,9 @@ class DAMDiscreteHopfield:
         return predicted
     
     #-∑F(state * x)
-    def energy(self, state):
+    def energy(self, state, power = 2):
         x = self.X@state
-        return -self.F(x, 2).sum()
+        return -self.F(x, power).sum()
     
     #F (x) = {if x > 0, x^n, else 0}
     def F(self, x, n):

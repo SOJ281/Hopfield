@@ -138,16 +138,16 @@ print("Corrupting Images")
 corrupted = [randomFlipping(d, 0.4) for d in pics]
 #corrupted = [highBlocking(d, 0.4) for d in pics]
            
-#hoppy = Hopfield(pics)
-hoppy = DAMDiscreteHopfield(pics)
+hoppy = Hopfield(pics)
+#hoppy = DAMDiscreteHopfield(pics)
 
 
 predictions = []
 longest = 0
-
+print(len(corrupted[0]))
 print("Running hopfield")
 for l in range(len(corrupted)):
-    predictions.append(hoppy.predict(corrupted[l], 3))
+    predictions.append(hoppy.predict(corrupted[l], 10, 3))
 
     comparePatterns(predictions[l][-1], pics[l])
     longest = max(longest, len(predictions[l]))
