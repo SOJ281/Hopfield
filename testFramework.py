@@ -131,153 +131,156 @@ for qxlp in range (15, 30, 1):
 
 exit(1)
 """
-print("============================================")
-print("General Error stuff")
-print("============================================")
-
-#from numpy import random
-for patternCount in range(1, 50):
-    rater = []
-    errorCounter = 0
-    counter = 0
-    correctRatio = []
-    errorRate = []
-    for purple in range(0, 50, 1):
-        patterns = np.array([random.choices([-1,1], k=100) for p in range(patternCount)])
-        #patterns = np.random.choice([0,1], size=(patternCount, 100))
-        hoppy = Hopfield(patterns)
-
-        corrupted = [randomFlipping(d, 0.1) for d in patterns]
-        #print(corrupted)
-
-        predictions = []
-        for p in range(len(corrupted)):
-            predictions.append(hoppy.predict(corrupted[p], 100)[-1])
-
-        counter +=1
-
-        errorRate.append(np.mean((patterns != predictions).sum(1)) / 100)
 
 
-    #print(errorCounter/counter)
-    #print(np.mean(rater))
-    print("Patterns: ",patternCount, np.mean(errorRate))
+def GeneralErrorstuff():
+    print("============================================")
+    print("General Error stuff")
+    print("============================================")
 
-print("============================================")
-print("Hopfield")
-print("============================================")
+    #from numpy import random
+    for patternCount in range(1, 50):
+        rater = []
+        errorCounter = 0
+        counter = 0
+        correctRatio = []
+        errorRate = []
+        for purple in range(0, 50, 1):
+            patterns = np.array([random.choices([-1,1], k=100) for p in range(patternCount)])
+            #patterns = np.random.choice([0,1], size=(patternCount, 100))
+            hoppy = Hopfield(patterns)
 
+            corrupted = [randomFlipping(d, 0.1) for d in patterns]
+            #print(corrupted)
 
+            predictions = []
+            for p in range(len(corrupted)):
+                predictions.append(hoppy.predict(corrupted[p], 100)[-1])
 
-
-
-
-
-
-
-
-
-
-patternPoints = []
-neuronPoints = []
-for l in range(10, 70, 1): ## no. of Patterns
-    counter = 0
-    for i in range(40, 100000, 5): # no. of Neurons
-        patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
-        hoppy = Hopfield(patterns)
-
-        corrupted = [highBlocking(d, 0.4) for d in patterns]
-
-        predictions = []
-        for p in range(len(corrupted)):
-            predictions.append(hoppy.predict(corrupted[p], 10)[-1])
-        
-        if (np.mean( patterns != predictions ) > 0.5):
             counter +=1
-            patternPoints.append(l)
-            neuronPoints.append(i)
-            print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
 
-        if (counter > 0):
-            break
+            errorRate.append(np.mean((patterns != predictions).sum(1)) / 100)
 
 
-fig, ax = plt.subplots(2,2)
-ax[0, 0].scatter(patternPoints, neuronPoints)
-ax[0, 0].set_title("Hopfield") 
+        #print(errorCounter/counter)
+        #print(np.mean(rater))
+        print("Patterns: ",patternCount, np.mean(errorRate))
 
 
-patternPoints = []
-neuronPoints = []
-for l in range(10, 70, 5): ## no. of Patterns
-    counter = 0
-    for i in range(40, 100000, 20): # no. of Neurons
-        patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
-        hoppy = Hopfield(patterns)
+def HopfieldSyncTests():
+    print("============================================")
+    print("Hopfield")
+    print("============================================")
 
-        corrupted = [highBlocking(d, 0.4) for d in patterns]
+    patternPoints = []
+    neuronPoints = []
+    for l in range(10, 70, 1): ## no. of Patterns
+        counter = 0
+        for i in range(40, 100000, 5): # no. of Neurons
+            patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
+            hoppy = Hopfield(patterns)
 
-        predictions = []
-        for p in range(len(corrupted)):
-            predictions.append(hoppy.predictAsyn(corrupted[p], 10)[-1])
-            #predictions.append(hoppy.predict(corrupted[p], 10)[-1])
-        
-        #print(i, ":", (patterns==predictions).sum()/(l*i))
-        #print((patterns==predictions).sum()/(l*i))
-        #print(l)
-        if (np.mean( patterns == predictions ) == 1):
-        #if (np.mean( patterns != predictions ) > 0.5):
-            counter +=1
-            patternPoints.append(l)
-            neuronPoints.append(i)
-            print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
+            corrupted = [highBlocking(d, 0.4) for d in patterns]
 
-        if (counter > 0):
-            break
+            predictions = []
+            for p in range(len(corrupted)):
+                predictions.append(hoppy.predict(corrupted[p], 10)[-1])
+            
+            if (np.mean( patterns != predictions ) > 0.5):
+                counter +=1
+                patternPoints.append(l)
+                neuronPoints.append(i)
+                print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
 
-
-fig, ax = plt.subplots(2,2)
-ax[0, 1].scatter(patternPoints, neuronPoints)
-ax[0, 1].set_title("HopfieldAsyn") 
+            if (counter > 0):
+                break
 
 
+    fig, ax = plt.subplots(2,2)
+    ax[0, 0].scatter(patternPoints, neuronPoints)
+    ax[0, 0].set_title("Hopfield") 
 
 
-print("============================================")
-print("Dense Associative Memory")
-print("============================================")
+def HopfieldAsyncTests():
+    patternPoints = []
+    neuronPoints = []
+    for l in range(10, 70, 5): ## no. of Patterns
+        counter = 0
+        for i in range(40, 100000, 20): # no. of Neurons
+            patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
+            hoppy = Hopfield(patterns)
 
-dpatternPoints = []
-dneuronPoints = []
-for l in range(10, 70, 10): # no. of Patterns
-    counter = 0
-    for i in range(40, 100000, 20): # no. of Neurons
-        patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
-        hoppy = DAMDiscreteHopfield(patterns)
+            corrupted = [highBlocking(d, 0.4) for d in patterns]
 
-        corrupted = [highBlocking(d, 0.4) for d in patterns]
+            predictions = []
+            for p in range(len(corrupted)):
+                predictions.append(hoppy.predictAsyn(corrupted[p], 10)[-1])
+                #predictions.append(hoppy.predict(corrupted[p], 10)[-1])
+            
+            #print(i, ":", (patterns==predictions).sum()/(l*i))
+            #print((patterns==predictions).sum()/(l*i))
+            #print(l)
+            if (np.mean( patterns == predictions ) == 1):
+            #if (np.mean( patterns != predictions ) > 0.5):
+                counter +=1
+                patternPoints.append(l)
+                neuronPoints.append(i)
+                print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
 
-        predictions = []
-        for p in range(len(corrupted)):
-            predictions.append(hoppy.predict(corrupted[p], 1)[-1])
-        
-        #print(i, ":", (patterns==predictions).sum()/(l*i))
-        #print((patterns==predictions).sum()/(l*i))
-        #print(l)
-        if ((patterns==predictions).sum()/(l*i) == 0.5):
-            counter +=1
-            dpatternPoints.append(l)
-            dneuronPoints.append(i)
-            print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
+            if (counter > 0):
+                break
 
-        if (counter > 2):
-            break
 
-#plt.title("DAM")
-#plt.xlabel("pattern number")
-#plt.ylabel("Neurons")
-#figb, axb = plt.subplots()
-ax[1, 0].scatter(dpatternPoints, dneuronPoints)
-ax[1, 0].set_title("DAM") 
-#axb.title("DAM")
-plt.show()
+    fig, ax = plt.subplots(2,2)
+    ax[0, 1].scatter(patternPoints, neuronPoints)
+    ax[0, 1].set_title("HopfieldAsyn")
+
+
+
+def DAMTests():
+    print("============================================")
+    print("Dense Associative Memory")
+    print("============================================")
+
+    dpatternPoints = []
+    dneuronPoints = []
+    for l in range(10, 70, 10): # no. of Patterns
+        counter = 0
+        for i in range(40, 100000, 20): # no. of Neurons
+            patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
+            hoppy = DAMDiscreteHopfield(patterns)
+
+            corrupted = [highBlocking(d, 0.4) for d in patterns]
+
+            predictions = []
+            for p in range(len(corrupted)):
+                predictions.append(hoppy.predict(corrupted[p], 1)[-1])
+            
+            #print(i, ":", (patterns==predictions).sum()/(l*i))
+            #print((patterns==predictions).sum()/(l*i))
+            #print(l)
+            if ((patterns==predictions).sum()/(l*i) == 0.5):
+                counter +=1
+                dpatternPoints.append(l)
+                dneuronPoints.append(i)
+                print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
+
+            if (counter > 2):
+                break
+
+    plt.title("DAM")
+    plt.xlabel("pattern number")
+    plt.ylabel("Neurons")
+    figb, axb = plt.subplots()
+    axb[1, 0].scatter(dpatternPoints, dneuronPoints)
+    axb[1, 0].set_title("DAM") 
+    axb.title("DAM")
+    plt.show()
+
+
+
+if __name__ == '__main__':
+    GeneralErrorstuff()
+    HopfieldSyncTests()
+    HopfieldSyncTests()
+    DAMTests()
