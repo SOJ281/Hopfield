@@ -139,7 +139,7 @@ def GeneralErrorstuff():
     print("============================================")
 
     file = open("Results/HopfieldError.csv",'w')
-    file.write("Pattern,ErrorRate")
+    file.write("Pattern,ErrorRate\n")
 
     #from numpy import random
     for patternCount in range(1, 50):
@@ -182,31 +182,34 @@ def HopfieldSyncTests():
     print("============================================")
 
     file = open("Results/HopfieldSync.csv",'w')
-    file.write("Patterns,Neurons,Ratio")
+    file.write("Patterns,Neurons,Ratio\n")
 
     patternPoints = []
     neuronPoints = []
     for l in range(10, 70, 1): ## no. of Patterns
         counter = 0
         for i in range(40, 100000, 5): # no. of Neurons
-            patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
-            hoppy = Hopfield(patterns)
+            try:
+                patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
+                hoppy = Hopfield(patterns)
 
-            corrupted = [highBlocking(d, 0.4) for d in patterns]
+                corrupted = [highBlocking(d, 0.4) for d in patterns]
 
-            predictions = []
-            for p in range(len(corrupted)):
-                predictions.append(hoppy.predict(corrupted[p], 10)[-1])
-            
-            if (np.mean( patterns != predictions ) > 0.5):
-                counter +=1
-                patternPoints.append(l)
-                neuronPoints.append(i)
-                print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
-                file.write("%s,%s,%s\n" % (len(patterns),len(patterns[0]),l/i))
+                predictions = []
+                for p in range(len(corrupted)):
+                    predictions.append(hoppy.predict(corrupted[p], 10)[-1])
+                
+                if (np.mean( patterns != predictions ) > 0.5):
+                    counter +=1
+                    patternPoints.append(l)
+                    neuronPoints.append(i)
+                    print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
+                    file.write("%s,%s,%s\n" % (len(patterns),len(patterns[0]),l/i))
 
-            if (counter > 0):
-                break
+                if (counter > 0):
+                    break
+            except:
+                pass
 
 
     fig, ax = plt.subplots(2,2)
@@ -217,36 +220,39 @@ def HopfieldSyncTests():
 
 def HopfieldAsyncTests():
     file = open("Results/HopfieldAsync.csv",'w')
-    file.write("Patterns,Neurons,Ratio")
+    file.write("Patterns,Neurons,Ratio\n")
 
     patternPoints = []
     neuronPoints = []
     for l in range(10, 70, 5): ## no. of Patterns
         counter = 0
         for i in range(40, 100000, 20): # no. of Neurons
-            patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
-            hoppy = Hopfield(patterns)
+            try:
+                patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
+                hoppy = Hopfield(patterns)
 
-            corrupted = [highBlocking(d, 0.4) for d in patterns]
+                corrupted = [highBlocking(d, 0.4) for d in patterns]
 
-            predictions = []
-            for p in range(len(corrupted)):
-                predictions.append(hoppy.predictAsyn(corrupted[p], 10)[-1])
-                #predictions.append(hoppy.predict(corrupted[p], 10)[-1])
-            
-            #print(i, ":", (patterns==predictions).sum()/(l*i))
-            #print((patterns==predictions).sum()/(l*i))
-            #print(l)
-            if (np.mean( patterns == predictions ) == 1):
-            #if (np.mean( patterns != predictions ) > 0.5):
-                counter +=1
-                patternPoints.append(l)
-                neuronPoints.append(i)
-                print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
-                file.write("%s,%s,%s\n", (len(patterns),len(patterns[0]),l/i))
+                predictions = []
+                for p in range(len(corrupted)):
+                    predictions.append(hoppy.predictAsyn(corrupted[p], 10)[-1])
+                    #predictions.append(hoppy.predict(corrupted[p], 10)[-1])
+                
+                #print(i, ":", (patterns==predictions).sum()/(l*i))
+                #print((patterns==predictions).sum()/(l*i))
+                #print(l)
+                if (np.mean( patterns == predictions ) == 1):
+                #if (np.mean( patterns != predictions ) > 0.5):
+                    counter +=1
+                    patternPoints.append(l)
+                    neuronPoints.append(i)
+                    print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
+                    file.write("%s,%s,%s\n", (len(patterns),len(patterns[0]),l/i))
 
-            if (counter > 0):
-                break
+                if (counter > 0):
+                    break
+            except:
+                pass
 
 
     fig, ax = plt.subplots(2,2)
@@ -262,34 +268,37 @@ def DAMTests():
     print("============================================")
 
     file = open("Results/DAM.csv",'w')
-    file.write("Patterns,Neurons,Ratio")
+    file.write("Patterns,Neurons,Ratio\n")
 
     dpatternPoints = []
     dneuronPoints = []
     for l in range(10, 70, 10): # no. of Patterns
         counter = 0
         for i in range(40, 100000, 20): # no. of Neurons
-            patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
-            hoppy = DAMDiscreteHopfield(patterns)
+            try:
+                patterns = np.array([random.choices([-1,1], k=i) for p in range(l)])
+                hoppy = DAMDiscreteHopfield(patterns)
 
-            corrupted = [highBlocking(d, 0.4) for d in patterns]
+                corrupted = [highBlocking(d, 0.4) for d in patterns]
 
-            predictions = []
-            for p in range(len(corrupted)):
-                predictions.append(hoppy.predict(corrupted[p], 1)[-1])
-            
-            #print(i, ":", (patterns==predictions).sum()/(l*i))
-            #print((patterns==predictions).sum()/(l*i))
-            #print(l)
-            if ((patterns==predictions).sum()/(l*i) == 0.5):
-                counter +=1
-                dpatternPoints.append(l)
-                dneuronPoints.append(i)
-                print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
-                file.write("%s,%s,%s\n" % (l,i,l/i))
+                predictions = []
+                for p in range(len(corrupted)):
+                    predictions.append(hoppy.predict(corrupted[p], 1)[-1])
+                
+                #print(i, ":", (patterns==predictions).sum()/(l*i))
+                #print((patterns==predictions).sum()/(l*i))
+                #print(l)
+                if ((patterns==predictions).sum()/(l*i) == 0.5):
+                    counter +=1
+                    dpatternPoints.append(l)
+                    dneuronPoints.append(i)
+                    print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
+                    file.write("%s,%s,%s\n" % (l,i,l/i))
 
-            if (counter > 2):
-                break
+                if (counter > 2):
+                    break
+            except:
+                pass
 
     plt.title("DAM")
     plt.xlabel("pattern number")
