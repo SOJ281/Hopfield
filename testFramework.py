@@ -3,6 +3,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 #Randomly inverts data
 def randomFlipping(input, flipCount):
@@ -138,40 +139,47 @@ def GeneralErrorstuff():
     print("General Error stuff")
     print("============================================")
 
-    file = open("Results/HopfieldError.csv",'w')
-    file.write("Pattern,ErrorRate\n")
+
+    file = open("Results/HopfieldErrorCorruption.csv",'w')
+    file.write("Pattern,ErrorRate,CorruptionLevel\n")
 
     #from numpy import random
-    for patternCount in range(1, 50):
+    for patternCount in range(1, 75):
         rater = []
         errorCounter = 0
         counter = 0
         correctRatio = []
         errorRate = []
-        corruption_level = 0.1
-        patternSize = 100
+        min_corruption = 0
+        max_corruption = 50
+        corruption_step = 10
+        num_neurons = 100
+        patternSize = 100 # Should be equal to the number of neurons?
         predict_iterations = 100
-        for purple in range(0, 50, 1):
-            patterns = np.array([random.choices([-1,1], k=patternSize) for p in range(patternCount)])
-            #patterns = np.random.choice([0,1], size=(patternCount, 100))
-            hoppy = Hopfield(patterns)
+        for corruption_level in range(min_corruption,max_corruption+corruption_step,corruption_step):
+            for purple in range(0, 50, 1):
+                patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
+                #patterns = np.random.choice([0,1], size=(patternCount, 100))
+                hoppy = Hopfield(patterns)
 
-            corrupted = [randomFlipping(d, corruption_level) for d in patterns]
-            #print(corrupted)
+                corrupted = [randomFlipping(d, (corruption_level/100)) for d in patterns]
+                #print(corrupted)
 
-            predictions = []
-            for p in range(len(corrupted)):
-                predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
-                # [-1] returns the final prediction (after predict_iteration iterations)
+                predictions = []
+                for p in range(len(corrupted)):
+                    predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
+                    # [-1] returns the final prediction (after predict_iteration iterations)
 
-            counter +=1
+                counter +=1
 
-            errorRate.append(np.mean((patterns != predictions).sum(1)) / 100)
+                errorRate.append(np.mean((patterns != predictions).sum(1)) / num_neurons)
 
-        #print(errorCounter/counter)
-        #print(np.mean(rater))
-        print("Patterns: ",patternCount, np.mean(errorRate))
-        file.write("%s,%s\n" % (patternCount, np.mean(errorRate)))
+            #print(errorCounter/counter)
+            #print(np.mean(rater))
+            
+            print("Patterns: ",patternCount, np.mean(errorRate),(corruption_level/100))
+            file.write("%s,%s,%s\n" % (patternCount, np.mean(errorRate), (corruption_level/100)))
+        
     
     file.close()
 
@@ -314,6 +322,7 @@ def DAMTests():
 
 if __name__ == '__main__':
     GeneralErrorstuff()
-    HopfieldSyncTests()
-    HopfieldSyncTests()
-    DAMTests()
+    
+    # HopfieldSyncTests()
+    # HopfieldSyncTests()
+    # DAMTests()
