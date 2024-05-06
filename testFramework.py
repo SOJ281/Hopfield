@@ -139,8 +139,10 @@ def GeneralErrorstuff():
     print("General Error stuff")
     print("============================================")
 
+    t = time.localtime(time.time())
+    formatted_t = (''.join((str(t.tm_mday),str(t.tm_hour), str(t.tm_min))))
 
-    file = open("Results/HopfieldErrorCorruption.csv",'w')
+    file = open("Results/HopfieldErrorCorruption%s.csv" % formatted_t,'w')
     file.write("Pattern,ErrorRate,CorruptionLevel\n")
 
     #from numpy import random
