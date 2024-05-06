@@ -138,6 +138,9 @@ def GeneralErrorstuff():
     print("General Error stuff")
     print("============================================")
 
+    file = open("Results/HopfieldError.csv",'w')
+    file.write("Pattern,ErrorRate")
+
     #from numpy import random
     for patternCount in range(1, 50):
         rater = []
@@ -145,32 +148,41 @@ def GeneralErrorstuff():
         counter = 0
         correctRatio = []
         errorRate = []
+        corruption_level = 0.1
+        patternSize = 100
+        predict_iterations = 100
         for purple in range(0, 50, 1):
-            patterns = np.array([random.choices([-1,1], k=100) for p in range(patternCount)])
+            patterns = np.array([random.choices([-1,1], k=patternSize) for p in range(patternCount)])
             #patterns = np.random.choice([0,1], size=(patternCount, 100))
             hoppy = Hopfield(patterns)
 
-            corrupted = [randomFlipping(d, 0.1) for d in patterns]
+            corrupted = [randomFlipping(d, corruption_level) for d in patterns]
             #print(corrupted)
 
             predictions = []
             for p in range(len(corrupted)):
-                predictions.append(hoppy.predict(corrupted[p], 100)[-1])
+                predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
+                # [-1] returns the final prediction (after predict_iteration iterations)
 
             counter +=1
 
             errorRate.append(np.mean((patterns != predictions).sum(1)) / 100)
 
-
         #print(errorCounter/counter)
         #print(np.mean(rater))
         print("Patterns: ",patternCount, np.mean(errorRate))
+        file.write("%s,%s\n" % (patternCount, np.mean(errorRate)))
+    
+    file.close()
 
 
 def HopfieldSyncTests():
     print("============================================")
     print("Hopfield")
     print("============================================")
+
+    file = open("Results/HopfieldSync.csv",'w')
+    file.write("Patterns,Neurons,Ratio")
 
     patternPoints = []
     neuronPoints = []
@@ -191,6 +203,7 @@ def HopfieldSyncTests():
                 patternPoints.append(l)
                 neuronPoints.append(i)
                 print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
+                file.write("%s,%s,%s\n" % (len(patterns),len(patterns[0]),l/i))
 
             if (counter > 0):
                 break
@@ -200,8 +213,12 @@ def HopfieldSyncTests():
     ax[0, 0].scatter(patternPoints, neuronPoints)
     ax[0, 0].set_title("Hopfield") 
 
+    file.close()
 
 def HopfieldAsyncTests():
+    file = open("Results/HopfieldAsync.csv",'w')
+    file.write("Patterns,Neurons,Ratio")
+
     patternPoints = []
     neuronPoints = []
     for l in range(10, 70, 5): ## no. of Patterns
@@ -226,6 +243,7 @@ def HopfieldAsyncTests():
                 patternPoints.append(l)
                 neuronPoints.append(i)
                 print("patterns: ", len(patterns), "Neurons: ", len(patterns[0]), "Ratio: ", l/i)
+                file.write("%s,%s,%s\n", (len(patterns),len(patterns[0]),l/i))
 
             if (counter > 0):
                 break
@@ -235,12 +253,16 @@ def HopfieldAsyncTests():
     ax[0, 1].scatter(patternPoints, neuronPoints)
     ax[0, 1].set_title("HopfieldAsyn")
 
+    file.close()
 
 
 def DAMTests():
     print("============================================")
     print("Dense Associative Memory")
     print("============================================")
+
+    file = open("Results/DAM.csv",'w')
+    file.write("Patterns,Neurons,Ratio")
 
     dpatternPoints = []
     dneuronPoints = []
@@ -264,6 +286,7 @@ def DAMTests():
                 dpatternPoints.append(l)
                 dneuronPoints.append(i)
                 print("patterns: ", l, "Neurons: ", i, "Ratio: ", l/i)
+                file.write("%s,%s,%s\n" % (l,i,l/i))
 
             if (counter > 2):
                 break
@@ -277,6 +300,7 @@ def DAMTests():
     axb.title("DAM")
     plt.show()
 
+    file.close()
 
 
 if __name__ == '__main__':
