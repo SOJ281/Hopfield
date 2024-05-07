@@ -134,7 +134,7 @@ exit(1)
 """
 
 
-def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=50):
+def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=50, betas=[8]):
     print("============================================")
     print("General Error stuff")
     print("============================================")
@@ -143,7 +143,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
     formatted_t = (''.join((str(t.tm_mday),str(t.tm_hour), str(t.tm_min))))
 
     file = open("Results/HopfieldError%s%s.csv" % (filename,formatted_t),'w')
-    file.write("Pattern,ErrorRate,CorruptionLevel,num_neurons,theta\n")
+    file.write("Pattern,ErrorRate,CorruptionLevel,num_neurons,param\n")
 
     min_corruption = corruption[0]
     max_corruption = corruption[1]
@@ -151,9 +151,17 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
     patternSize = 100 # Should be equal to the number of neurons?
     predict_iterations = 100
 
+    params = [thetas,betas]
+    if HopfieldType == "DAMDiscreteHopfield":
+        i=0
+    elif HopfieldType == "ContinuousHopfield":
+        i=1
+    else:
+        i=0
+
     #from numpy import random
     for num_neurons in nums_neurons:
-        for theta in thetas:
+        for param in params[i]:
             for patternCount in range(1, max_patterns):
                 rater = []
                 errorCounter = 0
@@ -162,7 +170,10 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                 errorRate = []
                 for corruption_level in range(min_corruption,max_corruption+corruption_step,corruption_step):
                     for purple in range(0, 50, 1):
-                        patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
+                        if HopfieldType == "Hopfield" or HopfieldType == "DAMDiscreteHopfield":
+                            patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
+                        else:
+                            patterns = np.array([random.choices([0,1], k=num_neurons) for p in range(patternCount)])
                         #patterns = np.random.choice([0,1], size=(patternCount, 100))
 
                         if HopfieldType == "Hopfield":
@@ -178,10 +189,12 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                         predictions = []
                         for p in range(len(corrupted)):
                             if HopfieldType == "Hopfield":
-                                predictions.append(hoppy.predict(corrupted[p], predict_iterations, theta=theta)[-1])
+                                predictions.append(hoppy.predict(corrupted[p], predict_iterations, theta=param)[-1])
                                 # [-1] returns the final prediction (after predict_iteration iterations)
-                            else:
+                            elif HopfieldType == "DAMDiscreteHopfield":
                                 predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
+                            elif HopfieldType == "ContinuousHopfield":
+                                predictions.append(hoppy.predict(corrupted[p], predict_iterations, beta=param)[-1])
 
                         counter +=1
 
@@ -190,8 +203,8 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                     #print(errorCounter/counter)
                     #print(np.mean(rater))
                     
-                    print("Patterns: ",patternCount, np.mean(errorRate),(corruption_level/100))
-                    file.write("%s,%s,%s,%s,%s\n" % (patternCount, np.mean(errorRate), (corruption_level/100),num_neurons,theta))
+                    print("Patterns: ",patternCount, np.mean(errorRate),(corruption_level/100),param)
+                    file.write("%s,%s,%s,%s,%s\n" % (patternCount, np.mean(errorRate), (corruption_level/100),num_neurons,param))
         
     
     file.close()
@@ -337,8 +350,11 @@ if __name__ == '__main__':
     #GeneralErrorstuff(filename="NoCorruptionThetas",HopfieldType="Hopfield",nums_neurons=[100],thetas=[0.1,0.2,0.4,0.8],corruption=[0,10,10],max_patterns=50)
     #GeneralErrorstuff(filename="DAM",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],thetas=[0.0],corruption=[0,50,10],max_patterns=75)
     #GeneralErrorstuff(filename="Continuous",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],corruption=[0,50,10],max_patterns=75)
-    GeneralErrorstuff(filename="NoCorruptionJusttheta0",HopfieldType="Hopfield",nums_neurons=[100],thetas=[0.0],corruption=[0,10,10],max_patterns=50)
+    #GeneralErrorstuff(filename="NoCorruptionJusttheta0",HopfieldType="Hopfield",nums_neurons=[100],thetas=[0.0],corruption=[0,10,10],max_patterns=50)
     
+    GeneralErrorstuff(filename="ContinuousBinary",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],corruption=[0,50,10],max_patterns=75)
+    GeneralErrorstuff(filename="ContinuousDifferentbetas",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[0.0,0.25,0.5,1.0,2.0,4.0],corruption=[0,0,10],max_patterns=50)
+
     # HopfieldSyncTests()
     # HopfieldSyncTests()
     # DAMTests()
