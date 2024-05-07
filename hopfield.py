@@ -151,8 +151,9 @@ class ContinuousHopfield:
         self.X = np.copy(inputs)
 
         newX = np.copy(self.X)
-        self.newX = np.array([newX[i]/np.mean(newX[i]) for i in range(len(newX))])
-        
+        #self.newX = np.array([newX[i]/np.mean(newX[i]) for i in range(len(newX))]) # original code
+        #self.newX = np.array([newX[i]/newX[i] for i in range(len(newX))]) # removed mean
+        self.newX = newX
     
     #Update rule
     #X softmax(beta X^T ξ)
