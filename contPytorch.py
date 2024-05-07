@@ -36,8 +36,8 @@ class ContinuousHopfield(nn.Module):
     def forward(self, input):
         #predicted = [np.copy(input)]
         #vals = softmax(self.beta * input @ np.transpose(self.newX) ) @ self.X 
-        vals = torch.matmul(torch.Tensor(softmax(self.beta * torch.matmul(input, torch.transpose(self.newX, 0, 1)))), self.X) 
-        #vals = softmax(beta * input @ np.transpose(self.X) ) @ self.X 
+        #vals = torch.matmul(torch.Tensor(softmax(self.beta * torch.matmul(input, torch.transpose(self.newX, 0, 1)))), self.X) 
+        vals = torch.matmul(torch.nn.functional.softmax(self.beta * torch.matmul(input, torch.transpose(self.X, 0, 1))), self.X) 
         return vals
     
 
@@ -60,7 +60,9 @@ class myModel:
 
         self.net = nn.Sequential(
             #ContinuousHopfield(inputData),
-            ContinuousHopfield(inputData),
+            
+            #ContinuousHopfield(inputData[:100]),
+            ContinuousHopfield([torch.rand(28*28) for i in range(100)]),
             nn.ReLU(),
             nn.Linear(28*28, 14*14),
             nn.ReLU(),
@@ -127,13 +129,13 @@ class myModel:
 
             trainingAcc.append(correct/len(trainingData))
             trainingLoss.append(running_loss/len(trainingData))
-            #print("Epoch:", epoch)
-            #print("Train Accuracy:",correct/len(trainingData), "Train Loss:",running_loss/len(trainingData))
+            print("Epoch:", epoch)
+            print("Train Accuracy:",correct/len(trainingData), "Train Loss:",running_loss/len(trainingData))
             testa, testl = self.testResults(testData, testDataLabels)
             testAcc.append(testa)
             testLoss.append(testl)
-            #print("Test Accuracy:", testacc, "Test Loss:", testloss)
-            #print("===========================================================")
+            print("Test Accuracy:", testa, "Test Loss:", testl)
+            print("===========================================================")
 
             if testAcc[best] < testa:
                 best = epoch
@@ -152,7 +154,7 @@ def prepro(img):
     #return torch.from_numpy(img/255).float()
 
 
-trainingData = train_data.data[:5000]
+trainingData = train_data.data#[:10000]
 #trainingLabels = torch.from_numpy(np.array([int(i[0]) for i in trainingData])).type(torch.LongTensor)
 trainingLabels = train_data.train_labels
 trainingData = [prepro(i) for i in trainingData]
@@ -162,23 +164,8 @@ testLabels = test_data.test_labels
 #testLabels = torch.from_numpy(np.array([int(i[0]) for i in valsTest])).type(torch.LongTensor)
 testData = [prepro(i) for i in valsTest]
 
-epochs = 25
+epochs = 150
 
-"""
-learningRates=[0.001, 0.01]
-momentum=[0.2, 0.5, 0.9]
-nesterov = [True, False]
-
-import itertools
-for lr, mom in list(itertools.product(learningRates, momentum)):
-    print("Training")
-    mlp = myModel(trainingData[:10], learningRate = lr, momentum = mom, loss_fn = nn.CrossEntropyLoss())
-    trainingAcc, trainingLoss, testAcc, testLoss, best = mlp.eval(epochs, trainingData, trainingLabels, testData, testLabels)
-    print("Best:", (lr, mom), "Values:")
-    print("Training:", trainingAcc[best], trainingLoss[best])
-    print("Test:", testAcc[best], testLoss[best])
-    print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-"""
 
 print("Training")
 mlp = myModel(trainingData[:100], learningRate = 0.001, momentum = 0.5, loss_fn = nn.CrossEntropyLoss())

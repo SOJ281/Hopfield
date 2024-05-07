@@ -101,37 +101,54 @@ class HopfieldBinary:
         return -0.5 * state @ self.weights @ state + np.sum(state*theta)
 
 
-"""
-for qxlp in range (15, 30, 1):
-    rater = []
-    errorCounter = 0
-    counter = 0
-    for i in range(0, 100, 1):
-        patterns = np.array([random.choices([-1,1], k=100) for p in range(15)])
-        hoppy = Hopfield(patterns)
+from scipy.special import softmax
+#Continuous Hopfield
+#Based on:
+#Hopfield Networks is All You Need
+class ContinuousHopfield:
+    #based on 'Dense Associative Memory for Pattern Recognition' paper
 
-        corrupted = [highBlocking(d, 0.4) for d in patterns]
+    #Initialisation function
+    def __init__(self, inputs):
+        self.n = len(inputs[0]) #no. of neurons
+        self.M = np.linalg.norm(inputs[0])
+        self.N = len(inputs) # no. of patterns
+        self.X = np.copy(inputs)
 
-        predictions = []
-        for p in range(len(corrupted)):
-            predictions.append(hoppy.predict(corrupted[p], 15)[-1])
+        newX = np.copy(self.X)
+        #self.newX = np.array([newX[i]/newX[i] for i in range(len(newX))]) # removed mean
+        #self.newX = newX
+    
+    #Update rule
+    #X softmax(beta X^T ξ)
+    def predict(self, input, iterations = 1, beta = 128):
+        predicted = [np.copy(input)]
+        #energy = self.energy(input, beta)
+
+        for i in range(iterations):
+            #vals = softmax(beta * predicted[i] @ np.transpose(self.newX) ) @ self.X 
+            vals = softmax(beta * input @ np.transpose(self.X) ) @ self.X 
         
-        #print(i, ":", (patterns==predictions).sum()/(l*i))
-        #print((patterns==predictions).sum()/(l*i))
-        #print(l)
-
-        counter +=1
-        rater.append(np.mean( patterns != predictions ))
-        if np.mean( patterns != predictions ) < 1.0:
-            errorCounter+=1
-            #print("Error")
-
-    #print(errorCounter/counter)
-    #print(np.mean(rater))
-    print("Patterns: ",qxlp, errorCounter/counter, np.mean(rater))
-
-exit(1)
-"""
+            #new_energy = self.energy(vals, beta)
+            #if not new_energy < energy:
+            #    break
+            #print("ENERGY", new_energy, energy, new_energy< energy, 2 * self.M**2, self.energy(vals, beta) < 2 * self.M**2)
+            
+            if (vals == predicted[i]).all():
+                break
+            predicted.append(vals)
+        return predicted
+    
+    # log(∑i[exp(βxi)])/β
+    def LSE(self, beta, X):
+        return np.log(np.sum([np.exp(beta*X[i]) for i in range(len(X))])) / beta
+    
+    #Energy rule
+    # E = − lse(β, X^T ξ) + 0.5 * ξ^T ξ + log(N)/β + 0.5 * M^2   
+    def energy(self, state, beta):
+        lse = -np.log(np.sum([np.exp(beta * self.X[i] * state) for i in range(len(self.X))])) / beta
+        x = lse + 0.5*np.transpose(state)@state + np.log(self.N)/beta + 0.5 * self.M**2
+        return x
 
 
 def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=50, betas=[8]):
@@ -159,6 +176,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
     else:
         i=0
 
+    print("Patterns: ","errorRate","corruption_level","param")
     #from numpy import random
     for num_neurons in nums_neurons:
         for param in params[i]:
@@ -354,7 +372,7 @@ if __name__ == '__main__':
     
     # Current experiments
     #GeneralErrorstuff(filename="ContinuousBinaryNoMean",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[8],corruption=[0,50,10],max_patterns=75)
-    GeneralErrorstuff(filename="ContinuousDifferentbetas",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[64,32,16,8],corruption=[0,0,10],max_patterns=25)
+    GeneralErrorstuff(filename="ContinuousDifferentNinjas",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[8182*2*2],corruption=[0, 50, 10],max_patterns=75)
 
     # HopfieldSyncTests()
     # HopfieldSyncTests()
