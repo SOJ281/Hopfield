@@ -73,7 +73,7 @@ def append_columns(infile, outfile,new_collumns):
 
 if __name__ == '__main__':
     #append_columns("Results\HopfieldError.csv","Results\HopfieldError_withthetas.csv","100,0.0")
-    plot_thetas("Results\HopfieldErrorNoCorruptionThetas62136.csv", "Error Rate vs. value of theta (no corruption)")
-    plot_corruption("Results\HopfieldErrorCorruption3.csv", "Hopfield: Error Rate vs. % Corruption of Original Image")
-    plot_corruption("Results\HopfieldErrorDAM7139.csv", "DAM: Error Rate vs. % Corruption of Original Image")
-    plot_corruption("Results\HopfieldErrorContinuous71014.csv", "Continuous: Error Rate vs. % Corruption of Original Image")
+    #plot_thetas("Results\HopfieldErrorNoCorruptionThetas62136.csv", "Error Rate vs. value of theta (no corruption)")
+    #plot_corruption("Results\HopfieldErrorCorruption3.csv", "Hopfield: Error Rate vs. % Corruption of Original Image")
+    #plot_corruption("Results\HopfieldErrorDAM7139.csv", "DAM: Error Rate vs. % Corruption of Original Image")
+    plot_corruption("Results\HopfieldErrorContinuousDifferentNinjas72325.csv", "Continuous: Error Rate vs. % Corruption of Original Image")

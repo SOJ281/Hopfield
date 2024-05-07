@@ -151,9 +151,9 @@ class ContinuousHopfield:
         self.X = np.copy(inputs)
 
         newX = np.copy(self.X)
-        #self.newX = np.array([newX[i]/np.mean(newX[i]) for i in range(len(newX))]) # original code
+        self.newX = np.array([newX[i]/np.mean(newX[i]) for i in range(len(newX))]) # original code
         #self.newX = np.array([newX[i]/newX[i] for i in range(len(newX))]) # removed mean
-        self.newX = newX
+        #self.newX = newX
     
     #Update rule
     #X softmax(beta X^T ξ)
@@ -170,8 +170,8 @@ class ContinuousHopfield:
             #    break
             #print("ENERGY", new_energy, energy, new_energy< energy, 2 * self.M**2, self.energy(vals, beta) < 2 * self.M**2)
             
-            #if vals == predicted[i]:
-            #    break
+            if (vals == predicted[i]).all():
+                break
             predicted.append(vals)
         return predicted
     
