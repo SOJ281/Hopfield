@@ -352,8 +352,9 @@ if __name__ == '__main__':
     #GeneralErrorstuff(filename="Continuous",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],corruption=[0,50,10],max_patterns=75)
     #GeneralErrorstuff(filename="NoCorruptionJusttheta0",HopfieldType="Hopfield",nums_neurons=[100],thetas=[0.0],corruption=[0,10,10],max_patterns=50)
     
-    GeneralErrorstuff(filename="ContinuousBinary",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],corruption=[0,50,10],max_patterns=75)
-    GeneralErrorstuff(filename="ContinuousDifferentbetas",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[0.0,0.25,0.5,1.0,2.0,4.0],corruption=[0,0,10],max_patterns=50)
+    # Current experiments
+    #GeneralErrorstuff(filename="ContinuousBinaryNoMean",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[8],corruption=[0,50,10],max_patterns=75)
+    GeneralErrorstuff(filename="ContinuousDifferentbetas",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[64,32,16,8],corruption=[0,0,10],max_patterns=25)
 
     # HopfieldSyncTests()
     # HopfieldSyncTests()
