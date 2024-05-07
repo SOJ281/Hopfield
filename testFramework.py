@@ -151,7 +151,7 @@ class ContinuousHopfield:
         return x
 
 
-def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=50, betas=[8]):
+def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=50, betas=[8], rectified=True):
     print("============================================")
     print("General Error stuff")
     print("============================================")
@@ -197,7 +197,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                         if HopfieldType == "Hopfield":
                             hoppy = Hopfield(patterns)
                         elif HopfieldType == "DAMDiscreteHopfield":
-                            hoppy = DAMDiscreteHopfield(patterns)
+                            hoppy = DAMDiscreteHopfield(patterns, rectified)
                         elif HopfieldType == "ContinuousHopfield":
                             hoppy = ContinuousHopfield(patterns)
 

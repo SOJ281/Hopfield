@@ -89,10 +89,11 @@ class DAMDiscreteHopfield:
     #based on 'Dense Associative Memory for Pattern Recognition' paper
 
     #Initialisation function
-    def __init__(self, inputs):
+    def __init__(self, inputs, rectified=True):
         self.n = len(inputs[0]) #no. of neurons
         self.N = len(inputs) # no. of patterns
         self.X = np.copy(inputs)
+        self.rectified = rectified
         
     
     #Update rule
@@ -134,7 +135,8 @@ class DAMDiscreteHopfield:
     
     #F (x) = {if x > 0, x^n, else 0}
     def F(self, x, n):
-        x[x < 0] = 0.
+        if self.rectified:
+            x[x < 0] = 0.
         return x**n
 
 #Continuous Hopfield
