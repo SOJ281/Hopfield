@@ -89,17 +89,18 @@ class DAMDiscreteHopfield:
     #based on 'Dense Associative Memory for Pattern Recognition' paper
 
     #Initialisation function
-    def __init__(self, inputs, rectified=True):
+    def __init__(self, inputs, rectified=True, power=2):
         self.n = len(inputs[0]) #no. of neurons
         self.N = len(inputs) # no. of patterns
         self.X = np.copy(inputs)
         self.rectified = rectified
+        self.power = power
         
     
     #Update rule
     #Asynchronously flips all bits randomly
     #Keeps flipped bit if energy is lowered
-    def predict(self, input, iterations = 5, power = 2):
+    def predict(self, input, iterations = 5):
 
         predicted = [np.copy(input)]
         
@@ -111,16 +112,16 @@ class DAMDiscreteHopfield:
             vals = predicted[l].copy()
             noFlip = True
 
-            prev = self.energy(vals, power)
+            prev = self.energy(vals)
 
             for i in valList:
                 new_vals = vals.copy()
                 new_vals[i] *= -1
 
-                current = self.energy(new_vals, power)
+                current = self.energy(new_vals)
 
                 if (current - prev) < 0:
-                    prev = self.energy(new_vals, power)
+                    prev = self.energy(new_vals)
                     vals[i] = new_vals[i]
                     noFlip = False
             if noFlip:
@@ -129,9 +130,9 @@ class DAMDiscreteHopfield:
         return predicted
     
     #-∑F(state * x)
-    def energy(self, state, power = 2):
+    def energy(self, state):
         x = self.X@state
-        return -self.F(x, power).sum()
+        return -self.F(x, self.power).sum()
     
     #F (x) = {if x > 0, x^n, else 0}
     def F(self, x, n):
