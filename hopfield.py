@@ -95,7 +95,6 @@ class DAMDiscreteHopfield:
         self.X = np.copy(inputs)
         self.rectified = rectified
         self.power = power
-        
     
     #Update rule
     #Asynchronously flips all bits randomly
@@ -271,7 +270,7 @@ class SimplicialHopfield(Hopfield):
                         energy_sum_k2 += self.weights_k2[i][j][k] * state[i] * state[j] * state[k]
 
         # Apply the simplicial hopfield energy rule
-        print(energy_sum_k2)
+        #print(energy_sum_k2)
         energy = ((-1/2) * energy_sum) + ((-1/3) * energy_sum_k2)
 
         # Sum over theta[i] * state[i]]
