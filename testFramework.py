@@ -199,7 +199,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                             hoppy = Hopfield(patterns)
                         elif HopfieldType == "DAMDiscreteHopfield":
                             patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
-                            hoppy = DAMDiscreteHopfield(patterns, rectified)
+                            hoppy = DAMDiscreteHopfield(patterns, rectified, power=param)
                         elif HopfieldType == "ContinuousBinaryHopfield":
                             patterns = np.array([random.choices([0,1], k=num_neurons) for p in range(patternCount)])
                             hoppy = ContinuousHopfield(patterns)
@@ -399,14 +399,13 @@ if __name__ == '__main__':
         # Didn't think there was much else to run here
 
     # DAM
-        # Rectified polynomial energy function
+    #   Rectified polynomial energy function
     GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,4,8],corruption=[0,50,10],max_patterns=75)
-        # polynomial energy function
+    #   Polynomial energy function
+    GeneralErrorstuff(filename="DAMDifferentPowerPolynomial",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,2,4,8],corruption=[0,50,10],max_patterns=75, rectified=False)
 
     # Continuous
-        # Continuous patterns
-    GeneralErrorstuff(filename="Continuous",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[1,2,4,8,16,32,64],corruption=[0, 50, 10],max_patterns=75)
-        # Binary patterns
-    
-    GeneralErrorstuff(filename="DAMDifferentPowerPolynomial",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,2,4,8],corruption=[0,50,10],max_patterns=75, rectified=False)
-    GeneralErrorstuff(filename="ContinuousBinary",HopfieldType="ContinuousBinaryHopfield",nums_neurons=[100],betas=[64,128,256],corruption=[0, 50, 10],max_patterns=75)
+    #   Continuous patterns
+    #GeneralErrorstuff(filename="Continuous",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[1,2,4,8,16,32,64],corruption=[0, 50, 10],max_patterns=75)
+    #   Binary patterns
+    #GeneralErrorstuff(filename="ContinuousBinary",HopfieldType="ContinuousBinaryHopfield",nums_neurons=[100],betas=[64,128,256],corruption=[0, 50, 10],max_patterns=75)
