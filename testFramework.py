@@ -177,7 +177,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
     else:
         i=0
 
-    print("Patterns: ","errorRate","corruption_level","param")
+    print("Patterns: ","errorRate","corruption_level","param","time")
     #from numpy import random
     for num_neurons in nums_neurons:
         for param in params[i]:
@@ -191,6 +191,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                 errorRate001 = []
                 errorRate0001 = []
                 errorRate00001 = []
+                start_time = time.time()
                 for corruption_level in range(min_corruption,max_corruption+corruption_step,corruption_step):
                     for purple in range(0, 50, 1):
                         if HopfieldType == "Hopfield":
@@ -237,7 +238,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                     #print(np.mean(rater))
                     
                     print("Patterns: ",patternCount, np.mean(errorRate),(corruption_level/100),param,np.mean(errorRate01),np.mean(errorRate001),np.mean(errorRate0001),np.mean(errorRate00001))
-                    file.write("%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (patternCount, np.mean(errorRate), (corruption_level/100),num_neurons,param,np.mean(errorRate01),np.mean(errorRate001),np.mean(errorRate0001),np.mean(errorRate00001)))
+                    file.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (patternCount, np.mean(errorRate), (corruption_level/100),num_neurons,param,time.time()-start_time,np.mean(errorRate01),np.mean(errorRate001),np.mean(errorRate0001),np.mean(errorRate00001)))
         
     
     file.close()
@@ -399,7 +400,7 @@ if __name__ == '__main__':
 
     # DAM
         # Rectified polynomial energy function
-    GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,2,4,8],corruption=[0,50,10],max_patterns=75)
+    GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,4,8],corruption=[0,50,10],max_patterns=75)
         # polynomial energy function
 
     # Continuous
