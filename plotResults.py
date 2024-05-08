@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 import numpy as np
+import time
 
 def plot_corruption(filename, title):
     file = open(filename,'r')
@@ -216,7 +217,64 @@ def plot_to_errorlever(filename,title,error_level,param_vals):
     plt.legend()
     plt.show()
 
+def errorleverMulti(filenames,error_level,param_vals,Corruption_level):
+    critical_pattern_nums = []
+    for file_index, filename in enumerate(filenames):
+        file = open(filename,'r')
+        pattern_nums = []
+        ErrorRates = []
+        CorruptionLevels = []
+        param = []
+        for line in file.readlines()[1:]:
+            line = line.strip().split(',')
+            pattern_nums.append(int(line[0]))
+            ErrorRates.append(float(line[1]))
+            CorruptionLevels.append(float(line[2]))
+            param.append(float(line[4])) # The parameter being changed e.g. theta, beta
+
+        # Plot a line for the critical number of patterns to maintain acceptable error rate at each corruption level
+        for corruption_level in [Corruption_level]:
+            for val in param_vals[file_index]:
+                reached_threshold = False
+                val_pattern_nums = []
+                val_ErrorRates = []
+                for i in range(len(pattern_nums)):
+                    #print(param[i],val,CorruptionLevels[i],corruption_level)
+                    if param[i] == val and CorruptionLevels[i] == corruption_level:
+                        val_pattern_nums.append(pattern_nums[i])
+                        val_ErrorRates.append(ErrorRates[i])
+                
+                for j in range(1,len(val_pattern_nums)):
+                    #print(val_ErrorRates[j], error_level, val_ErrorRates[j] >= error_level)
+                    if val_ErrorRates[j] >= error_level:
+                        # plot this as the critical point for the network
+                        critical_pattern_nums.append(val_pattern_nums[j]) # j-1 to get the pattern BEFORE it crosses the error rate crosses the threshold
+                        reached_threshold = True
+                        break
+
+                if reached_threshold == False:
+                    critical_pattern_nums.append(np.nan)
+
+            # plt.plot(param_vals, critical_pattern_nums, label="%s%% corruption" % (float(corruption_level)*100), marker='o')
+
+    # plt.title(title)
+    # plt.xlabel("Param value")
+    # plt.ylabel("Number of Patterns stored before Error Rate exceeds %s" % error_level)
+    # plt.legend()
+    # plt.show()   
+    return critical_pattern_nums
+
+def writeTableToFile(outfile,filenames,Error_levels,param_vals,corruption_levels):
+    t = time.localtime(time.time())
+    formatted_t = (''.join((str(t.tm_mday),str(t.tm_hour), str(t.tm_min))))
+    file=open(outfile+formatted_t+".csv",'x')
     
+    file.write("Error_Level"+','.join(labels)+"\n")
+    for corruption_level in corruption_levels:
+        for Error_level in Error_levels:
+            critical_nums = [str(val) for val in errorleverMulti(filenames,Error_level,param_vals,corruption_level)]
+            file.write(str(corruption_level)+","+str(Error_level)+","+','.join(critical_nums)+"\n")
+    file.close()
 
 if __name__ == '__main__':
     #append_columns("Results\HopfieldError.csv","Results\HopfieldError_withthetas.csv","100,0.0")
@@ -276,7 +334,7 @@ if __name__ == '__main__':
     """
 
     error_level = 0.1
-    corruption_levels = [0,0.1]
+    corruption_levels = [0.0,0.1]
     #plot_to_errorlever("Results\Scott\HopfieldErrorContinuous8103.csv","Critical numbers of patterns to maintain Error Rate <= %s" % error_level,error_level=error_level,param_vals=[1,2,4,8,16,32,64])
 
 
@@ -290,5 +348,7 @@ if __name__ == '__main__':
     param_vals = [[0],[4],[2],[16],[64],[64],[0],[0]]
     labels = ["Hopfield", "DAMRectified", "DAMPoly", "DAMExp", "ContinuousBinary", "Continuous", "SimplicialNoPairwise", "SimplicialWithPairwise"]
     #regular(theta=0), DAMrectified(power), DAMpoly(power), DAMExp(), ContinuousBinary(beta), Continuous(beta), Simplicial 
-    plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % corruption_levels[0], corruption_level=corruption_levels[0], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)
-    plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % corruption_levels[1], corruption_level=corruption_levels[1], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)
+    # plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % corruption_levels[0], corruption_level=corruption_levels[0], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)
+    # plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % corruption_levels[1], corruption_level=corruption_levels[1], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)
+
+    writeTableToFile("CriticalValuesTable",filenames,[0,0.05,0.1],param_vals,corruption_levels)
