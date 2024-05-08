@@ -152,7 +152,7 @@ class ContinuousHopfield:
         return x
 
 
-def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=50, betas=[8], rectified=True):
+def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=50, betas=[8], rectified=True, powers=[2]):
     print("============================================")
     print("General Error stuff")
     print("============================================")
@@ -169,9 +169,9 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
     patternSize = 100 # Should be equal to the number of neurons?
     predict_iterations = 100
 
-    params = [thetas,betas]
+    params = [thetas,betas,powers]
     if HopfieldType == "DAMDiscreteHopfield":
-        i=0
+        i=2
     elif "Continuous" in HopfieldType:
         i=1
     else:
@@ -199,12 +199,12 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                         elif HopfieldType == "DAMDiscreteHopfield":
                             patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
                             hoppy = DAMDiscreteHopfield(patterns, rectified)
-                        elif HopfieldType == "ContinuousBinary":
+                        elif HopfieldType == "ContinuousBinaryHopfield":
                             patterns = np.array([random.choices([0,1], k=num_neurons) for p in range(patternCount)])
                             hoppy = ContinuousHopfield(patterns)
-                        elif HopfieldType == "Continuous":
+                        elif HopfieldType == "ContinuousHopfield":
                             random.seed(1)
-                            patterns = np.array([[random.random() for k in num_neurons] for p in range(patternCount)])
+                            patterns = np.array([[random.random() for k in range(num_neurons)] for p in range(patternCount)])
                             hoppy = ContinuousHopfield(patterns)
                         #patterns = np.random.choice([0,1], size=(patternCount, 100))
 
@@ -218,7 +218,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                                 # [-1] returns the final prediction (after predict_iteration iterations)
                             elif HopfieldType == "DAMDiscreteHopfield":
                                 predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
-                            elif HopfieldType == "ContinuousHopfield":
+                            elif HopfieldType == "ContinuousHopfield" or HopfieldType == "ContinuousBinaryHopfield":
                                 predictions.append(hoppy.predict(corrupted[p], predict_iterations, beta=param)[-1])
 
                         counter +=1
@@ -236,8 +236,8 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                     #print(errorCounter/counter)
                     #print(np.mean(rater))
                     
-                    print("Patterns: ",patternCount, np.mean(errorRate),(corruption_level/100),param)
-                    file.write("%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (patternCount, np.mean(errorRate), (corruption_level/100),num_neurons,param,errorRate01,errorRate001,errorRate0001,errorRate00001))
+                    print("Patterns: ",patternCount, np.mean(errorRate),(corruption_level/100),param,np.mean(errorRate01),np.mean(errorRate001),np.mean(errorRate0001),np.mean(errorRate00001))
+                    file.write("%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (patternCount, np.mean(errorRate), (corruption_level/100),num_neurons,param,np.mean(errorRate01),np.mean(errorRate001),np.mean(errorRate0001),np.mean(errorRate00001)))
         
     
     file.close()
@@ -389,11 +389,23 @@ if __name__ == '__main__':
     #GeneralErrorstuff(filename="ContinuousBinaryNoMean",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[8],corruption=[0,50,10],max_patterns=75)
     #GeneralErrorstuff(filename="ContinuousDifferentNinjas",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[8182*2*2],corruption=[0, 50, 10],max_patterns=75)
 
+
+
     """
     To Run
     """
     # Regular Hopfield
+        # Didn't think there was much else to run here
 
     # DAM
+        # Rectified polynomial energy function
+    GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,2,4,8],corruption=[0,50,10],max_patterns=75)
+        # polynomial energy function
 
     # Continuous
+        # Continuous patterns
+    GeneralErrorstuff(filename="Continuous",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[1,2,4,8,16,32,64],corruption=[0, 50, 10],max_patterns=75)
+        # Binary patterns
+    
+    GeneralErrorstuff(filename="DAMDifferentPowerPolynomial",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,2,4,8],corruption=[0,50,10],max_patterns=75, rectified=False)
+    GeneralErrorstuff(filename="ContinuousBinary",HopfieldType="ContinuousBinaryHopfield",nums_neurons=[100],betas=[64,128,256],corruption=[0, 50, 10],max_patterns=75)
