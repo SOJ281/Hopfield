@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import numpy as np
 
 def plot_corruption(filename, title):
     file = open(filename,'r')
@@ -126,6 +127,38 @@ def plotAtCorruptionLevel(filename, title, corruption_level, param_vals):
     plt.legend()
     plt.show()
 
+def plotAtCorruptionLevelMulti(filenames, title, corruption_level, param_vals, nums_neurons, labels, error_level):
+    for file_index, filename in enumerate(filenames):
+        file = open(filename,'r')
+
+        pattern_ratios = []
+        ErrorRates = []
+        CorruptionLevels = []
+        param = []
+        for line in file.readlines()[1:]:
+            line = line.strip().split(',')
+            if float(line[2]) == corruption_level:
+                pattern_ratios.append(float(line[0])/float(line[3]))
+                ErrorRates.append(float(line[1]))
+                param.append(float(line[4])) # The parameter being changed e.g. theta, beta
+
+        for index,val in enumerate(param_vals[file_index]):
+            param_pattern_nums = []
+            param_ErrorRates = []
+            for p in range(len(pattern_ratios)):
+                if param[p] == val:
+                    param_pattern_nums.append(pattern_ratios[p])
+                    param_ErrorRates.append(ErrorRates[p])
+
+            plt.plot(param_pattern_nums, param_ErrorRates, label="%s" % labels[file_index])
+    
+    plt.axhline(y=error_level, color='r', linestyle='dashed')
+    plt.title(title)
+    plt.xlabel("Ratio of Patterns:Neurons")
+    plt.ylabel("Error Rate")
+    plt.legend()
+    plt.show()
+
 def append_columns(infile, outfile,new_collumns):
     inf = open(infile,'r')
     outf = open(outfile,'w')
@@ -136,6 +169,54 @@ def append_columns(infile, outfile,new_collumns):
 
     inf.close()
     outf.close()
+
+def plot_to_errorlever(filename,title,error_level,param_vals):
+    file = open(filename,'r')
+    pattern_nums = []
+    ErrorRates = []
+    CorruptionLevels = []
+    param = []
+    for line in file.readlines()[1:]:
+        line = line.strip().split(',')
+        pattern_nums.append(int(line[0]))
+        ErrorRates.append(float(line[1]))
+        CorruptionLevels.append(float(line[2]))
+        param.append(float(line[4])) # The parameter being changed e.g. theta, beta
+
+    # Plot a line for the critical number of patterns to maintain acceptable error rate at each corruption level
+    for corruption_level in [0.0,0.1,0.2,0.3,0.4,0.5]:
+        critical_pattern_nums = []
+        for val in param_vals:
+            reached_threshold = False
+            val_pattern_nums = []
+            val_ErrorRates = []
+            for i in range(len(pattern_nums)):
+                if param[i] == val and CorruptionLevels[i] == corruption_level:
+                    val_pattern_nums.append(pattern_nums[i])
+                    val_ErrorRates.append(ErrorRates[i])
+            
+            for j in range(1,len(val_pattern_nums)):
+                print(val_ErrorRates[j], error_level, val_ErrorRates[j] >= error_level)
+                if val_ErrorRates[j] >= error_level:
+                    # plot this as the critical point for the network
+                    critical_pattern_nums.append(val_pattern_nums[j]) # j-1 to get the pattern BEFORE it crosses the error rate crosses the threshold
+                    reached_threshold = True
+                    break
+
+            if reached_threshold == False:
+                critical_pattern_nums.append(np.nan)
+
+        print(param_vals)
+        print(critical_pattern_nums)
+        plt.plot(param_vals, critical_pattern_nums, label="%s%% corruption" % (float(corruption_level)*100), marker='o')
+
+    plt.title(title)
+    plt.xlabel("Param value")
+    plt.ylabel("Number of Patterns stored before Error Rate exceeds %s" % error_level)
+    plt.legend()
+    plt.show()
+
+    
 
 if __name__ == '__main__':
     #append_columns("Results\HopfieldError.csv","Results\HopfieldError_withthetas.csv","100,0.0")
@@ -156,7 +237,8 @@ if __name__ == '__main__':
 
 
     """
-    New Results
+    """
+    # New Results
     """
     # Different betas, 0-50% corruption
     #plot_betas("Results\Scott\HopfieldErrorContinuous8103.csv", "Error Rate vs. value of beta", [0.0,0.25,0.5,1.0,2.0,4.0])
@@ -191,3 +273,22 @@ if __name__ == '__main__':
     plot_corruption("Results\Scott\HopfieldErrorDAMEXPFull81049.csv", "DAMExp: Error rate vs. value of beta (no corruption)")
     plot_corruption("Results\Scott\HopfieldErrorDAMEXPFull81049.csv", "DAMExp: Error rate vs. value of beta (20% corruption)")
     plot_corruption("Results\Scott\HopfieldErrorDAMEXPFull81049.csv", "DAMExp: Error rate vs. value of beta (50% corruption)")
+    """
+
+    error_level = 0.1
+    corruption_levels = [0,0.1]
+    #plot_to_errorlever("Results\Scott\HopfieldErrorContinuous8103.csv","Critical numbers of patterns to maintain Error Rate <= %s" % error_level,error_level=error_level,param_vals=[1,2,4,8,16,32,64])
+
+
+    #append_columns("Results\HopfieldErrorCorruption3.csv","Results\HopfieldErrorCorruption3withparams.csv",",100,0.0")
+    # Error rate, for a fixed hyperparameter value, at a fixed level of corruption, for each Hopfield type on the same graph
+    # If you need more results could run more experiments set to cut out it ErrorRate goes above threshold (or a certain time has elapsed)
+    #plotAtCorruptionLevel("Results\HopfieldErrorDAMDifferentPowerRectified8243.csv", "DAMRectified: Error rate vs. value of beta (10% corruption)", corruption_level=0.1, param_vals=[64])
+    #filenames = ["Results\HopfieldErrorCorruption3withparams.csv", "Results\HopfieldErrorDAMDifferentPowerRectified8243.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerPolynomial8521.csv", "Results\Scott\HopfieldErrorDAMEXPFull81049.csv","Results\Scott\HopfieldErrorContinuousBinary8517.csv","Results\Scott\HopfieldErrorContinuous8103.csv", "Results\HopfieldErrorSimplicialNopairwise81933.csv", "Results\HopfieldErrorSimplicialPairwise81937.csv"]
+    filenames = ["Results\HopfieldErrorCorruption3withparams.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerRectified81634.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerPolynomial8521.csv", "Results\Scott\HopfieldErrorDAMEXPFull81049.csv","Results\Scott\HopfieldErrorContinuousBinary8517.csv","Results\Scott\HopfieldErrorContinuous8103.csv", "Results\HopfieldErrorSimplicialNopairwise81933.csv", "Results\HopfieldErrorSimplicialPairwise81937.csv"]
+    nums_neurons = [100,100,100,100,100,100]
+    param_vals = [[0],[4],[2],[16],[64],[64],[0],[0]]
+    labels = ["Hopfield", "DAMRectified", "DAMPoly", "DAMExp", "ContinuousBinary", "Continuous", "SimplicialNoPairwise", "SimplicialWithPairwise"]
+    #regular(theta=0), DAMrectified(power), DAMpoly(power), DAMExp(), ContinuousBinary(beta), Continuous(beta), Simplicial 
+    plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % corruption_levels[0], corruption_level=corruption_levels[0], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)
+    plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % corruption_levels[1], corruption_level=corruption_levels[1], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)

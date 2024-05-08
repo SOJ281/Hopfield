@@ -1,4 +1,4 @@
-from hopfield import Hopfield, ContinuousHopfield, DAMDiscreteHopfield
+from hopfield import Hopfield, ContinuousHopfield, DAMDiscreteHopfield, SimplicialHopfield
 import numpy as np
 import random
 import matplotlib.pyplot as plt
@@ -127,7 +127,7 @@ class ContinuousHopfield:
         return x
 
 
-def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=[1,50,1], betas=[8], rectified=True, powers=[2]):
+def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=[1,50,1], betas=[8], rectified=True, powers=[2], pairwise_connections=False):
     print("============================================")
     print("General Error stuff")
     print("============================================")
@@ -185,6 +185,9 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                             random.seed(1)
                             patterns = np.array([[random.random() for k in range(num_neurons)] for p in range(patternCount)])
                             hoppy = ContinuousHopfield(patterns)
+                        elif HopfieldType == "SimplicialHopfield":
+                            patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
+                            hoppy = SimplicialHopfield(patterns, rectified, pairwise_connections=pairwise_connections)
                         #patterns = np.random.choice([0,1], size=(patternCount, 100))
 
                         corrupted = [randomFlipping(d, (corruption_level/100)) for d in patterns]
@@ -378,11 +381,15 @@ if __name__ == '__main__':
     # Regular Hopfield
         # Didn't think there was much else to run here
 
+    # Simplicial
+    GeneralErrorstuff(filename="SimplicialNopairwise", HopfieldType="SimplicialHopfield",nums_neurons=[100], pairwise_connections=False,max_patterns=[1, 75, 1])
+    GeneralErrorstuff(filename="SimplicialPairwise", HopfieldType="SimplicialHopfield",nums_neurons=[100], pairwise_connections=True,max_patterns=[1, 75, 1])
+
     # DAM
     #   Rectified polynomial energy function
-    GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,4,8],corruption=[0,50,10],max_patterns=[5, 75, 5])
+    #GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,4,8],corruption=[0,50,10],max_patterns=[5, 75, 5])
     #   Polynomial energy function
-    GeneralErrorstuff(filename="DAMDifferentPowerPolynomial",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,2,4,8],corruption=[0,50,10],max_patterns=[5, 75, 5], rectified=False)
+    #GeneralErrorstuff(filename="DAMDifferentPowerPolynomial",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,2,4,8],corruption=[0,50,10],max_patterns=[5, 75, 5], rectified=False)
 
     # Continuous
     #   Continuous patterns
@@ -397,6 +404,6 @@ if __name__ == '__main__':
         # Binary patterns
     
     #GeneralErrorstuff(filename="ContinuousBinary",HopfieldType="ContinuousBinaryHopfield",nums_neurons=[100],betas=[64,128,256],corruption=[0, 50, 10],max_patterns=75)
-    GeneralErrorstuff(filename="DAMEXPpow1",HopfieldType="DAMEXP",nums_neurons=[100],powers=[1],corruption=[0,50,10],max_patterns=[5, 75, 5], rectified=False)
+    #GeneralErrorstuff(filename="DAMEXPpow1",HopfieldType="DAMEXP",nums_neurons=[100],powers=[1],corruption=[0,50,10],max_patterns=[5, 75, 5], rectified=False)
     #GeneralErrorstuff(filename="Continuous",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[1,2,4,8,16,32,64],corruption=[0, 50, 10],max_patterns=75)
     #GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,4,8],corruption=[0,50,10],max_patterns=75)
