@@ -24,51 +24,21 @@ def highBlocking(input, blockLevel):
     return blocked
 
 
-class HopfieldBinary:
-    #Initialisation function, gets weights for bipolar patterns
-    def __init__(self, inputs):
+class DAMEXP:
+    #based on 'Dense Associative Memory for Pattern Recognition' paper
 
+    #Initialisation function
+    def __init__(self, inputs, rectified=True, power=2):
         self.n = len(inputs[0]) #no. of neurons
-        self.itemsLen = len(inputs) # no. of patterns
-        self.weights = np.empty((self.n,self.n)) #Connection matrix
-        self.X = np.array(inputs)
-
-        #w(ij) ​= ∑p​[s(i)​(p) * s(j)​(p)]
-        for i in range(self.itemsLen):
-            self.weights += np.outer(2*inputs[i]-1, 2*inputs[i]-1)
-
-        for i in range(self.n):
-            self.weights[i][i] = 0
-        # notsure if this step is necessary
-        self.weights = self.weights/self.itemsLen
-
-    #Prediction function
-    #yini ​​= xi​ + ∑j​[yj * ​wji​]
-    #yi = yini{1 if > =0, else 0}
-    #Iterates until hits iteration count or energy minimized
-    def predict(self, input, iterations, theta = 0.0):
-        #print("Predictions")
-
-        predicted = [np.copy(input)]
-
-        s = self.energy(predicted[0])
-
-        for i in range(0, iterations):
-            newVal = np.sign(self.weights @ predicted[i])
-
-            st = self.energy(newVal, theta = theta)
-            if s == st:
-                break
-            s = st
-            predicted.append(newVal)
-        return predicted
+        self.N = len(inputs) # no. of patterns
+        self.X = np.copy(inputs)
+        self.power = power
+        
     
-    #Prediction function
-    #yini ​​= xi​ + ∑j​[yj * ​wji​]
-    #yi = yini{1 if > =0, else 0}
-    #Iterates until hits iteration count or energy minimized
-    def predictAsyn(self, input, iterations, theta = 0.0):
-        #print("Predictions")
+    #Update rule
+    #Asynchronously flips all bits randomly
+    #Keeps flipped bit if energy is lowered
+    def predict(self, input, iterations = 5):
 
         predicted = [np.copy(input)]
         
@@ -86,21 +56,26 @@ class HopfieldBinary:
                 new_vals = vals.copy()
                 new_vals[i] *= -1
 
-                current = self.energy(new_vals, theta)
+                current = self.energy(new_vals)
 
                 if (current - prev) < 0:
-                    prev = self.energy(new_vals, theta)
+                    prev = self.energy(new_vals)
                     vals[i] = new_vals[i]
                     noFlip = False
             if noFlip:
                 break
             predicted.append(vals)
         return predicted
-
-    #E = 0.5 * ∑i​∑j[​wij​ * vi * ​vj] ​+ ∑i[​θi​ * vi]
-    def energy(self, state, theta = 0.0):
-        return -0.5 * state @ self.weights @ state + np.sum(state*theta)
-
+    
+    #-∑F(state * x)
+    def energy(self, state):
+        x = self.X@state
+        return -np.exp(self.lse(1, x) )
+        #return -np.exp(x, self.power)
+    
+    def lse(self, beta, value):
+        return beta**-1 * np.log(np.exp(beta * value).sum())
+    
 
 from scipy.special import softmax
 #Continuous Hopfield
@@ -152,7 +127,7 @@ class ContinuousHopfield:
         return x
 
 
-def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=50, betas=[8], rectified=True, powers=[2]):
+def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=[1,50,1], betas=[8], rectified=True, powers=[2]):
     print("============================================")
     print("General Error stuff")
     print("============================================")
@@ -181,7 +156,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
     #from numpy import random
     for num_neurons in nums_neurons:
         for param in params[i]:
-            for patternCount in range(1, max_patterns):
+            for patternCount in range(max_patterns[0], max_patterns[1], max_patterns[2]):
                 rater = []
                 errorCounter = 0
                 counter = 0
@@ -200,6 +175,9 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                         elif HopfieldType == "DAMDiscreteHopfield":
                             patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
                             hoppy = DAMDiscreteHopfield(patterns, rectified, power=param)
+                        elif HopfieldType == "DAMEXP":
+                            patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
+                            hoppy = DAMEXP(patterns, rectified)
                         elif HopfieldType == "ContinuousBinaryHopfield":
                             patterns = np.array([random.choices([0,1], k=num_neurons) for p in range(patternCount)])
                             hoppy = ContinuousHopfield(patterns)
@@ -218,6 +196,8 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                                 predictions.append(hoppy.predict(corrupted[p], predict_iterations, theta=param)[-1])
                                 # [-1] returns the final prediction (after predict_iteration iterations)
                             elif HopfieldType == "DAMDiscreteHopfield":
+                                predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
+                            elif HopfieldType == "DAMEXP":
                                 predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
                             elif HopfieldType == "ContinuousHopfield" or HopfieldType == "ContinuousBinaryHopfield":
                                 predictions.append(hoppy.predict(corrupted[p], predict_iterations, beta=param)[-1])
@@ -400,12 +380,23 @@ if __name__ == '__main__':
 
     # DAM
     #   Rectified polynomial energy function
-    GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,4,8],corruption=[0,50,10],max_patterns=75)
+    GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,4,8],corruption=[0,50,10],max_patterns=[5, 75, 5])
     #   Polynomial energy function
-    GeneralErrorstuff(filename="DAMDifferentPowerPolynomial",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,2,4,8],corruption=[0,50,10],max_patterns=75, rectified=False)
+    GeneralErrorstuff(filename="DAMDifferentPowerPolynomial",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,2,4,8],corruption=[0,50,10],max_patterns=[5, 75, 5], rectified=False)
 
     # Continuous
     #   Continuous patterns
     #GeneralErrorstuff(filename="Continuous",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[1,2,4,8,16,32,64],corruption=[0, 50, 10],max_patterns=75)
     #   Binary patterns
     #GeneralErrorstuff(filename="ContinuousBinary",HopfieldType="ContinuousBinaryHopfield",nums_neurons=[100],betas=[64,128,256],corruption=[0, 50, 10],max_patterns=75)
+        # Rectified polynomial energy function
+        # polynomial energy function
+
+    # Continuous
+        # Continuous patterns
+        # Binary patterns
+    
+    #GeneralErrorstuff(filename="ContinuousBinary",HopfieldType="ContinuousBinaryHopfield",nums_neurons=[100],betas=[64,128,256],corruption=[0, 50, 10],max_patterns=75)
+    GeneralErrorstuff(filename="DAMEXPpow1",HopfieldType="DAMEXP",nums_neurons=[100],powers=[1],corruption=[0,50,10],max_patterns=[5, 75, 5], rectified=False)
+    #GeneralErrorstuff(filename="Continuous",HopfieldType="ContinuousHopfield",nums_neurons=[100],thetas=[0.0],betas=[1,2,4,8,16,32,64],corruption=[0, 50, 10],max_patterns=75)
+    #GeneralErrorstuff(filename="DAMDifferentPowerRectified",HopfieldType="DAMDiscreteHopfield",nums_neurons=[100],powers=[1,4,8],corruption=[0,50,10],max_patterns=75)

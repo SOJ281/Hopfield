@@ -188,3 +188,99 @@ class ContinuousHopfield:
         lse = -np.log(np.sum([np.exp(beta * self.X[i] * state) for i in range(len(self.X))])) / beta
         x = lse + 0.5*np.transpose(state)@state + np.log(self.N)/beta + 0.5 * self.M**2
         return x
+
+
+# To understand Simplicial Complex, consider the following example:
+# if number of neurons = 6
+# a 2-skeleton simplicial complex will contain the following pairwise and setwise connections
+# between the neurons: 
+#    [ 
+#        [  
+#           {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {3, 4}, {3, 5},
+#           {3, 6}, {4, 5}, {4, 6}, {5, 6}
+#        ],
+#        [  
+#            {1, 2, 3}, {1, 2, 4}, {1, 2, 5}, {1, 2, 6}, {1, 3, 4}, {1, 3, 5}, {1, 3, 6}, {1, 4, 5}, {1, 4, 6},
+#            {1, 5, 6}, {2, 3, 4}, {2, 3, 5}, {2, 3, 6}, {2, 4, 5}, {2, 4, 6}, {2, 5, 6}, {3, 4, 5}, {3, 4, 6},
+#            {3, 5, 6}, {4, 5, 6}
+#        ]
+#    ]
+class SimplicialHopfield(Hopfield):
+    def __init__(self, inputs, pairwise_connections=False):
+        self.pairwise_connections = pairwise_connections
+        if self.pairwise_connections:
+            super().__init__(inputs)
+        self.n = len(inputs[0])  # Number of neurons
+        self.itemsLen = len(inputs)  # Number of patterns
+        self.weights_k2 = np.zeros((self.n, self.n, self.n))  # Connection matrix
+        self.X = np.array(inputs)  # Store the input patterns
+
+        # Loop through each pattern and update the K2 weights
+        #w(ijk) ​= ∑p​[s(i)​(p) * s(j)​(p) * s(k)(p)]
+        for p in range(self.itemsLen):
+            # Get the current pattern
+            pattern = inputs[p]
+
+            for i in range(self.n):
+                for j in range(self.n):
+                    for k in range(self.n):
+                        if i != j != k:  # Ignore self-connections
+                            self.weights_k2[i][j][k] += pattern[i] * pattern[j] * pattern[k]
+
+        # Normalize the weights by the number of patterns
+        self.weights_k2 = self.weights_k2 / self.itemsLen
+
+    #Prediction function
+    #yini ​​= ∑d[xi​ + ∑j​[yj * ​wji​]] where d ∈ K
+    #yi = yini{1 if > =0, else 0}
+    #Iterates until hits iteration count or energy minimized
+    def predict(self, input, iterations, theta = 0.0):
+
+        predicted = [np.copy(input)]
+
+        s = self.energy(predicted[0])
+
+        for i in range(0, iterations):
+            if self.pairwise_connections:
+                simplicial_update_sum = (self.weights @ predicted[i]) + (self.weights_k2 @ predicted[i]) 
+            else:
+                simplicial_update_sum = self.weights_k2 @ predicted[i]
+
+            newVal = np.sign(simplicial_update_sum)[0]
+
+            st = self.energy(newVal, theta = theta)
+            if s == st:
+                break
+            s = st
+            predicted.append(newVal)
+        return predicted
+
+    #E = -(1/2 * ∑i​∑j[​wij​ * vi * ​vj] + 1/3 *  ∑i​∑j∑k[​wijk​ * vi * ​vj * vk]) ​+ ∑i[​θi​ * vi] for {1, 2} ∈ K 
+    def energy(self, state, theta=0.0):
+        energy_sum = 0.0
+        energy_sum_k2 = 0.0
+        n = len(state)
+
+        # Loop over all sets of neurons (i, j, k) to calculate the summation for weights and states for 2-skeleton simplex
+        for i in range(n):
+            for j in range(n):
+                if self.pairwise_connections and i != j:
+                    energy_sum += self.weights[i][j] * state[i] * state[j]
+                for k in range(n):
+                    if i != j != k:  # Exclude self-connections
+                        energy_sum_k2 += self.weights_k2[i][j][k] * state[i] * state[j] * state[k]
+
+        # Apply the simplicial hopfield energy rule
+        print(energy_sum_k2)
+        energy = ((-1/2) * energy_sum) + ((-1/3) * energy_sum_k2)
+
+        # Sum over theta[i] * state[i]]
+        t = [theta] * n
+        theta_sum = 0.0
+        for i in range(n):
+            theta_sum += t[i] * state[i]
+        
+        # Get the final energy
+        energy += theta_sum
+
+        return energy
