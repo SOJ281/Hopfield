@@ -111,7 +111,7 @@ if __name__ == '__main__':
     # plot_corruption("Results\HopfieldErrorContinuous71014.csv", "Continuous: Error Rate vs. % Corruption of Original Image")
     # plot_betas("Results\HopfieldErrorContinuousDifferentbetas71335.csv", "Error Rate vs. value of beta (no corruption)", [0.0,0.25,0.5,1.0,2.0,4.0])
 
-    plot_corruption("Results\HopfieldErrorContinuousBinary71912.csv", "Continuous: Error Rate vs. % Corruption of Original Image")
+    plot_corruption("Results\HopfieldErrorDAMEXPpow181245.csv", "DAM: Error Rate vs. % Corruption of Original Image")
     plot_betas("Results\HopfieldErrorContinuousDifferentbetas72020.csv", "Error Rate vs. value of beta (no corruption)", [0.0,0.25,0.5,1.0,2.0,4.0])
     
     #plot_thetas("Results\HopfieldErrorNoCorruptionThetas62136.csv", "Error Rate vs. value of theta (no corruption)")
