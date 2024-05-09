@@ -227,7 +227,7 @@ def errorleverMulti(filenames,error_level,param_vals,Corruption_level):
         param = []
         for line in file.readlines()[1:]:
             line = line.strip().split(',')
-            pattern_nums.append(int(line[0]))
+            pattern_nums.append(float(line[0])/float(line[3]))
             ErrorRates.append(float(line[1]))
             CorruptionLevels.append(float(line[2]))
             param.append(float(line[4])) # The parameter being changed e.g. theta, beta
@@ -269,7 +269,7 @@ def writeTableToFile(outfile,filenames,Error_levels,param_vals,corruption_levels
     formatted_t = (''.join((str(t.tm_mday),str(t.tm_hour), str(t.tm_min))))
     file=open(outfile+formatted_t+".csv",'x')
     
-    file.write("Error_Level"+','.join(labels)+"\n")
+    file.write("Corruption_Level,Error_Level"+','.join(labels)+"\n")
     for corruption_level in corruption_levels:
         for Error_level in Error_levels:
             critical_nums = [str(val) for val in errorleverMulti(filenames,Error_level,param_vals,corruption_level)]
@@ -333,8 +333,6 @@ if __name__ == '__main__':
     plot_corruption("Results\Scott\HopfieldErrorDAMEXPFull81049.csv", "DAMExp: Error rate vs. value of beta (50% corruption)")
     """
 
-    error_level = 0.1
-    corruption_levels = [0.0,0.1]
     #plot_to_errorlever("Results\Scott\HopfieldErrorContinuous8103.csv","Critical numbers of patterns to maintain Error Rate <= %s" % error_level,error_level=error_level,param_vals=[1,2,4,8,16,32,64])
 
 
@@ -343,12 +341,21 @@ if __name__ == '__main__':
     # If you need more results could run more experiments set to cut out it ErrorRate goes above threshold (or a certain time has elapsed)
     #plotAtCorruptionLevel("Results\HopfieldErrorDAMDifferentPowerRectified8243.csv", "DAMRectified: Error rate vs. value of beta (10% corruption)", corruption_level=0.1, param_vals=[64])
     #filenames = ["Results\HopfieldErrorCorruption3withparams.csv", "Results\HopfieldErrorDAMDifferentPowerRectified8243.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerPolynomial8521.csv", "Results\Scott\HopfieldErrorDAMEXPFull81049.csv","Results\Scott\HopfieldErrorContinuousBinary8517.csv","Results\Scott\HopfieldErrorContinuous8103.csv", "Results\HopfieldErrorSimplicialNopairwise81933.csv", "Results\HopfieldErrorSimplicialPairwise81937.csv"]
-    filenames = ["Results\HopfieldErrorCorruption3withparams.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerRectified81634.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerPolynomial8521.csv", "Results\Scott\HopfieldErrorDAMEXPFull81049.csv","Results\Scott\HopfieldErrorContinuousBinary8517.csv","Results\Scott\HopfieldErrorContinuous8103.csv", "Results\HopfieldErrorSimplicialNopairwise81933.csv", "Results\HopfieldErrorSimplicialPairwise81937.csv"]
-    nums_neurons = [100,100,100,100,100,100]
-    param_vals = [[0],[4],[2],[16],[64],[64],[0],[0]]
-    labels = ["Hopfield", "DAMRectified", "DAMPoly", "DAMExp", "ContinuousBinary", "Continuous", "SimplicialNoPairwise", "SimplicialWithPairwise"]
+    #filenames = ["Results\HopfieldErrorCorruption3withparams.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerRectified81634with2.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerPolynomial81910.csv", "Results\Scott\HopfieldErrorDAMEXPFull81049.csv","Results\Scott\HopfieldErrorContinuousBinary8517.csv","Results\Scott\HopfieldErrorContinuous8103.csv", "Results\HopfieldErrorSimplicialPairwise81937.csv", "Results\HopfieldErrorSimplicialNopairwise81933.csv"]
+    #filenames = ["Results\HopfieldErrorCorruption3withparams.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerRectified81634with2.csv","Results\Scott\HopfieldErrorDAMEXPFull81049.csv","Results\Scott\HopfieldErrorContinuousBinary8517.csv","Results\Scott\HopfieldErrorContinuous8103.csv", "Results\HopfieldErrorSimplicialPairwise81937.csv", "Results\HopfieldErrorSimplicialNopairwise81933.csv"]
+    
+    error_level = 0.1
+    corruption_levels = [0.0,0.1]
+    filenames = ["Results\HopfieldErrorCorruption3withparams.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerRectified81634with2.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerPolynomial81910.csv", "Results\Scott\HopfieldErrorDAMEXPFull81049.csv","Results\Scott\HopfieldErrorContinuousBinary8517.csv","Results\Scott\HopfieldErrorContinuous8103.csv", "Results\HopfieldErrorSimplicialPairwise81937.csv", "Results\HopfieldErrorSimplicialNopairwise81933.csv"]
+    #filenames = ["Results\HopfieldErrorCorruption3withparams.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerRectified81634with2.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerPolynomial81910.csv", "Results\Scott\HopfieldErrorDAMExponential1st9448.csv","Results\HopfieldErrorContinuousBinaryInversion9315.csv","Results\HopfieldErrorContinuousInversion9350.csv", "Results\HopfieldErrorSimplicialPairwise81937.csv", "Results\HopfieldErrorSimplicialNopairwise81933.csv"]
+    nums_neurons = [100,100,100,100,100,100,100]
+    param_vals = [[0],[2],[2],[16],[64],[64],[0],[0]]
+    labels = ["Hopfield", "DAM", "DAMPoly","DAMExp", "ContinuousBinary", "Continuous", "SimplicialWithPairwise", "SimplicialNoPairwise"]
     #regular(theta=0), DAMrectified(power), DAMpoly(power), DAMExp(), ContinuousBinary(beta), Continuous(beta), Simplicial 
-    # plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % corruption_levels[0], corruption_level=corruption_levels[0], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)
-    # plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % corruption_levels[1], corruption_level=corruption_levels[1], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)
+    plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % (corruption_levels[0]*100), corruption_level=corruption_levels[0], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)
+    # plotAtCorruptionLevelMulti(filenames, "Error Rate by Hopfield Type (%s%% corruption)" % (corruption_levels[1]*100), corruption_level=corruption_levels[1], param_vals=param_vals,nums_neurons=nums_neurons, labels=labels,error_level=error_level)
 
-    writeTableToFile("CriticalValuesTable",filenames,[0,0.05,0.1],param_vals,corruption_levels)
+    filenames = ["Results\HopfieldErrorCorruption3withparams.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerRectified81634with2.csv", "Results\Scott\HopfieldErrorDAMDifferentPowerPolynomial81910.csv", "Results\Scott\HopfieldErrorDAMExponential1st9448.csv","Results\HopfieldErrorContinuousBinaryInversion9315.csv","Results\HopfieldErrorContinuousInversion9350.csv", "Results\HopfieldErrorSimplicialPairwise81937.csv", "Results\HopfieldErrorSimplicialNopairwise81933.csv"]
+    error_level = [0.0,0.025,0.05,0.1]
+    corruption_levels = [0.0,0.1]
+    writeTableToFile("CriticalValuesTable",filenames,error_level,param_vals,corruption_levels)
