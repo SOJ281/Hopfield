@@ -1,0 +1,4 @@
+Pattern,ErrorRate,CorruptionLevel,num_neurons,param
+1,0.04,0.0,25,0.0,24.094785690307617,nan,nan,nan,nan
+1,0.039999999999999994,0.1,25,0.0,51.982911586761475,nan,nan,nan,nan
+2,0.04,0.0,25,0.0,45.125529050827026,nan,nan,nan,nan

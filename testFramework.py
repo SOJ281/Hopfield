@@ -156,78 +156,78 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
     #from numpy import random
     for num_neurons in nums_neurons:
         for param in params[i]:
-            for max_pattern in max_patterns:#range(max_patterns[0], max_patterns[1], max_patterns[2]):
-                for patternCount in range(1,max_pattern):
-                    rater = []
-                    errorCounter = 0
-                    counter = 0
-                    correctRatio = []
-                    errorRate = []
-                    errorRate01 = []
-                    errorRate001 = []
-                    errorRate0001 = []
-                    errorRate00001 = []
-                    start_time = time.time()
-                    for corruption_level in range(min_corruption,max_corruption+corruption_step,corruption_step):
-                        for purple in range(0, 50, 1):
+            #for max_pattern in max_patterns:#range(max_patterns[0], max_patterns[1], max_patterns[2]):
+            for patternCount in range(max_patterns[0], max_patterns[1], max_patterns[2]):
+                rater = []
+                errorCounter = 0
+                counter = 0
+                correctRatio = []
+                errorRate = []
+                errorRate01 = []
+                errorRate001 = []
+                errorRate0001 = []
+                errorRate00001 = []
+                start_time = time.time()
+                for corruption_level in range(min_corruption,max_corruption+corruption_step,corruption_step):
+                    for purple in range(0, 50, 1):
+                        if HopfieldType == "Hopfield":
+                            patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
+                            hoppy = Hopfield(patterns)
+                        elif HopfieldType == "DAMDiscreteHopfield":
+                            patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
+                            hoppy = DAMDiscreteHopfield(patterns, rectified, power=param)
+                        elif HopfieldType == "DAMEXP":
+                            patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
+                            hoppy = DAMEXP(patterns, rectified)
+                        elif HopfieldType == "ContinuousBinaryHopfield":
+                            patterns = np.array([random.choices([0,1], k=num_neurons) for p in range(patternCount)])
+                            hoppy = ContinuousHopfield(patterns)
+                        elif HopfieldType == "ContinuousHopfield":
+                            random.seed(1)
+                            patterns = np.array([[random.random() for k in range(num_neurons)] for p in range(patternCount)])
+                            hoppy = ContinuousHopfield(patterns)
+                        elif HopfieldType == "SimplicialHopfield":
+                            patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
+                            hoppy = SimplicialHopfield(patterns, pairwise_connections=pairwise_connections)
+                        #patterns = np.random.choice([0,1], size=(patternCount, 100))
+
+                        corrupted = [randomFlipping(d, (corruption_level/100)) for d in patterns]
+                        #print(corrupted)
+
+                        predictions = []
+                        for p in range(len(corrupted)):
                             if HopfieldType == "Hopfield":
-                                patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
-                                hoppy = Hopfield(patterns)
+                                predictions.append(hoppy.predict(corrupted[p], predict_iterations, theta=param)[-1])
+                                # [-1] returns the final prediction (after predict_iteration iterations)
                             elif HopfieldType == "DAMDiscreteHopfield":
-                                patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
-                                hoppy = DAMDiscreteHopfield(patterns, rectified, power=param)
+                                predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
                             elif HopfieldType == "DAMEXP":
-                                patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
-                                hoppy = DAMEXP(patterns, rectified)
-                            elif HopfieldType == "ContinuousBinaryHopfield":
-                                patterns = np.array([random.choices([0,1], k=num_neurons) for p in range(patternCount)])
-                                hoppy = ContinuousHopfield(patterns)
-                            elif HopfieldType == "ContinuousHopfield":
-                                random.seed(1)
-                                patterns = np.array([[random.random() for k in range(num_neurons)] for p in range(patternCount)])
-                                hoppy = ContinuousHopfield(patterns)
+                                predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
+                            elif HopfieldType == "ContinuousHopfield" or HopfieldType == "ContinuousBinaryHopfield":
+                                predictions.append(hoppy.predict(corrupted[p], predict_iterations, beta=param)[-1])
                             elif HopfieldType == "SimplicialHopfield":
-                                patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
-                                hoppy = SimplicialHopfield(patterns, pairwise_connections=pairwise_connections)
-                            #patterns = np.random.choice([0,1], size=(patternCount, 100))
+                                predictions.append(hoppy.predict(corrupted[p], predict_iterations, theta=param)[-1])
 
-                            corrupted = [randomFlipping(d, (corruption_level/100)) for d in patterns]
-                            #print(corrupted)
+                        counter +=1
 
-                            predictions = []
-                            for p in range(len(corrupted)):
-                                if HopfieldType == "Hopfield":
-                                    predictions.append(hoppy.predict(corrupted[p], predict_iterations, theta=param)[-1])
-                                    # [-1] returns the final prediction (after predict_iteration iterations)
-                                elif HopfieldType == "DAMDiscreteHopfield":
-                                    predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
-                                elif HopfieldType == "DAMEXP":
-                                    predictions.append(hoppy.predict(corrupted[p], predict_iterations)[-1])
-                                elif HopfieldType == "ContinuousHopfield" or HopfieldType == "ContinuousBinaryHopfield":
-                                    predictions.append(hoppy.predict(corrupted[p], predict_iterations, beta=param)[-1])
-                                elif HopfieldType == "SimplicialHopfield":
-                                    predictions.append(hoppy.predict(corrupted[p], predict_iterations, theta=param)[-1])
+                        if HopfieldType == "ContinuousHopfield":
+                            errorRate.append(np.mean((patterns != predictions).sum(1)) / num_neurons)
 
-                            counter +=1
+                            errorRate01.append(np.mean((np.isclose(patterns,predictions,atol=10**-2)).sum(1)) / num_neurons)
+                            errorRate001.append(np.mean((np.isclose(patterns,predictions,atol=10**-3)).sum(1)) / num_neurons)
+                            errorRate0001.append(np.mean((np.isclose(patterns,predictions,atol=10**-4)).sum(1)) / num_neurons)
+                            errorRate00001.append(np.mean((np.isclose(patterns,predictions,atol=10**-5)).sum(1)) / num_neurons)
+                        else:
+                            errorRate.append(np.mean((patterns != predictions).sum(1)) / num_neurons)
 
-                            if HopfieldType == "ContinuousHopfield":
-                                errorRate.append(np.mean((patterns != predictions).sum(1)) / num_neurons)
+                    #print(errorCounter/counter)
+                    #print(np.mean(rater))
+                    
+                    print("Patterns: ",patternCount, np.mean(errorRate),(corruption_level/100),param,np.mean(errorRate01),np.mean(errorRate001),np.mean(errorRate0001),np.mean(errorRate00001))
+                    file.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (patternCount, np.mean(errorRate), (corruption_level/100),num_neurons,param,time.time()-start_time,np.mean(errorRate01),np.mean(errorRate001),np.mean(errorRate0001),np.mean(errorRate00001)))
 
-                                errorRate01.append(np.mean((np.isclose(patterns,predictions,atol=10**-2)).sum(1)) / num_neurons)
-                                errorRate001.append(np.mean((np.isclose(patterns,predictions,atol=10**-3)).sum(1)) / num_neurons)
-                                errorRate0001.append(np.mean((np.isclose(patterns,predictions,atol=10**-4)).sum(1)) / num_neurons)
-                                errorRate00001.append(np.mean((np.isclose(patterns,predictions,atol=10**-5)).sum(1)) / num_neurons)
-                            else:
-                                errorRate.append(np.mean((patterns != predictions).sum(1)) / num_neurons)
-
-                        #print(errorCounter/counter)
-                        #print(np.mean(rater))
-                        
-                        print("Patterns: ",patternCount, np.mean(errorRate),(corruption_level/100),param,np.mean(errorRate01),np.mean(errorRate001),np.mean(errorRate0001),np.mean(errorRate00001))
-                        file.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (patternCount, np.mean(errorRate), (corruption_level/100),num_neurons,param,time.time()-start_time,np.mean(errorRate01),np.mean(errorRate001),np.mean(errorRate0001),np.mean(errorRate00001)))
-
-                        if np.mean(errorRate) > max_error:
-                            break
+                    if np.mean(errorRate) > max_error:
+                        break
     
     file.close()
 
@@ -416,7 +416,7 @@ if __name__ == '__main__':
     """
     To run
     """
-    GeneralErrorstuff(filename="Simplicial",HopfieldType="SimplicialHopfield",nums_neurons=[5,10,15,20],corruption=[0, 10, 10],max_patterns=[5,10,15,20])
-    GeneralErrorstuff(filename="Simplicial",HopfieldType="DAMExponential",nums_neurons=[5,6,8,9,10,12],corruption=[0, 10, 10],max_patterns=[20,20,30,40,50,75])
-    GeneralErrorstuff(filename="Simplicial",HopfieldType="SimplicialHopfield",nums_neurons=[25,30],corruption=[0, 10, 10],max_patterns=[25,30])
-    GeneralErrorstuff(filename="Simplicial",HopfieldType="DAMExponential",nums_neurons=[13,14],corruption=[0, 10, 10],max_patterns=[90,150])
+    #GeneralErrorstuff(filename="SimplicialHopfield1st",HopfieldType="SimplicialHopfield",nums_neurons=[5,10,15,20],corruption=[0, 10, 10],max_patterns=[5,10,15,20])
+    GeneralErrorstuff(filename="DAMExponential1st",HopfieldType="DAMEXP",nums_neurons=[15],corruption=[0, 10, 10],max_patterns=[5, 160, 5])
+    #GeneralErrorstuff(filename="DAMExponential2nd",HopfieldType="DAMEXP",nums_neurons=[14],corruption=[0, 10, 10],max_patterns=[90,150, 5])
+    GeneralErrorstuff(filename="SimplicialHopfield2nd",HopfieldType="SimplicialHopfield",nums_neurons=[25],corruption=[0, 10, 10],max_patterns=[1, 30, 1])
