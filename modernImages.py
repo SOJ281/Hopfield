@@ -129,4 +129,4 @@ for l in range(len(corrupted)):
     predictions[l] = [reshape(predictions[l][i]) for i in range(len(predictions[l]))]
 
 pics = [reshape(pics[i]) for i in range(len(pics))]
-resultsPlotter(pics[:5], predictions[:5])
+resultsPlotter(pics, predictions)
