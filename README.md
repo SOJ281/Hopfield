@@ -13,8 +13,6 @@ Numpy
 
 scikit-image
 
-scikit-learn
-
 PIL
 
 matplotlib
