@@ -9,6 +9,7 @@ All test scripts can be run using the following command:
     python3 <script>
 
 Required modules:
+
 Numpy
 
 scikit-image
