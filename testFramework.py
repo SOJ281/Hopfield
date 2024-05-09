@@ -1,4 +1,4 @@
-from hopfield import Hopfield, ContinuousHopfield, DAMDiscreteHopfield, SimplicialHopfield
+from hopfield import *
 import numpy as np
 import random
 import matplotlib.pyplot as plt
@@ -23,108 +23,6 @@ def highBlocking(input, blockLevel):
         blocked[i] = 1
     return blocked
 
-
-class DAMEXP:
-    #based on 'Dense Associative Memory for Pattern Recognition' paper
-
-    #Initialisation function
-    def __init__(self, inputs, rectified=True, power=2):
-        self.n = len(inputs[0]) #no. of neurons
-        self.N = len(inputs) # no. of patterns
-        self.X = np.copy(inputs)
-        self.power = power
-        
-    
-    #Update rule
-    #Asynchronously flips all bits randomly
-    #Keeps flipped bit if energy is lowered
-    def predict(self, input, iterations = 5):
-
-        predicted = [np.copy(input)]
-        
-        for l in range(iterations):
-            valList = np.arange(0, self.n)
-            random.shuffle(valList)
-
-
-            vals = predicted[l].copy()
-            noFlip = True
-
-            prev = self.energy(vals)
-
-            for i in valList:
-                new_vals = vals.copy()
-                new_vals[i] *= -1
-
-                current = self.energy(new_vals)
-
-                if (current - prev) < 0:
-                    prev = self.energy(new_vals)
-                    vals[i] = new_vals[i]
-                    noFlip = False
-            if noFlip:
-                break
-            predicted.append(vals)
-        return predicted
-    
-    #-∑F(state * x)
-    def energy(self, state):
-        x = self.X@state
-        return -np.exp(self.lse(1, x) )
-        #return -np.exp(x, self.power)
-    
-    def lse(self, beta, value):
-        return beta**-1 * np.log(np.exp(beta * value).sum())
-    
-
-from scipy.special import softmax
-#Continuous Hopfield
-#Based on:
-#Hopfield Networks is All You Need
-class ContinuousHopfield:
-    #based on 'Dense Associative Memory for Pattern Recognition' paper
-
-    #Initialisation function
-    def __init__(self, inputs):
-        self.n = len(inputs[0]) #no. of neurons
-        self.M = np.linalg.norm(inputs[0])
-        self.N = len(inputs) # no. of patterns
-        self.X = np.copy(inputs)
-
-        newX = np.copy(self.X)
-        #self.newX = np.array([newX[i]/newX[i] for i in range(len(newX))]) # removed mean
-        #self.newX = newX
-    
-    #Update rule
-    #X softmax(beta X^T ξ)
-    def predict(self, input, iterations = 1, beta = 128):
-        predicted = [np.copy(input)]
-        #energy = self.energy(input, beta)
-
-        for i in range(iterations):
-            #vals = softmax(beta * predicted[i] @ np.transpose(self.newX) ) @ self.X 
-            vals = softmax(beta * input @ np.transpose(self.X) ) @ self.X 
-        
-            #new_energy = self.energy(vals, beta)
-            #if not new_energy < energy:
-            #    break
-            #print("ENERGY", new_energy, energy, new_energy< energy, 2 * self.M**2, self.energy(vals, beta) < 2 * self.M**2)
-            
-            if (vals == predicted[i]).all():
-                break
-            predicted.append(vals)
-        return predicted
-    
-    # log(∑i[exp(βxi)])/β
-    def LSE(self, beta, X):
-        return np.log(np.sum([np.exp(beta*X[i]) for i in range(len(X))])) / beta
-    
-    #Energy rule
-    # E = − lse(β, X^T ξ) + 0.5 * ξ^T ξ + log(N)/β + 0.5 * M^2   
-    def energy(self, state, beta):
-        lse = -np.log(np.sum([np.exp(beta * self.X[i] * state) for i in range(len(self.X))])) / beta
-        x = lse + 0.5*np.transpose(state)@state + np.log(self.N)/beta + 0.5 * self.M**2
-        return x
 
 
 def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], corruption=[0,50,10], max_patterns=[1,50,1], betas=[8], rectified=True, powers=[2], pairwise_connections=False,max_error=1):
@@ -178,7 +76,7 @@ def GeneralErrorstuff(filename, HopfieldType, nums_neurons=[100], thetas=[0.0], 
                             hoppy = DAMDiscreteHopfield(patterns, rectified, power=param)
                         elif HopfieldType == "DAMEXP":
                             patterns = np.array([random.choices([-1,1], k=num_neurons) for p in range(patternCount)])
-                            hoppy = DAMEXP(patterns, rectified)
+                            hoppy = DAMEXP(patterns)
                         elif HopfieldType == "ContinuousBinaryHopfield":
                             patterns = np.array([random.choices([0,1], k=num_neurons) for p in range(patternCount)])
                             hoppy = ContinuousHopfield(patterns)
@@ -417,7 +315,7 @@ if __name__ == '__main__':
     To run
     """
     #GeneralErrorstuff(filename="SimplicialHopfield1st",HopfieldType="SimplicialHopfield",nums_neurons=[5,10,15,20],corruption=[0, 10, 10],max_patterns=[5,10,15,20])
-    # GeneralErrorstuff(filename="DAMExponential1st",HopfieldType="DAMEXP",nums_neurons=[15],corruption=[0, 10, 10],max_patterns=[5, 160, 5])
+    GeneralErrorstuff(filename="DAMExponential1st",HopfieldType="DAMEXP",nums_neurons=[15],corruption=[0, 10, 10],max_patterns=[5, 160, 5])
     #GeneralErrorstuff(filename="DAMExponential2nd",HopfieldType="DAMEXP",nums_neurons=[14],corruption=[0, 10, 10],max_patterns=[90,150, 5])
     # GeneralErrorstuff(filename="SimplicialHopfield2nd",HopfieldType="SimplicialHopfield",nums_neurons=[25],corruption=[0, 10, 10],max_patterns=[1, 30, 1])
 

@@ -6,7 +6,7 @@ from skimage.color import rgb2gray
 from skimage.transform import resize
 
 from matplotlib import pyplot as plt
-from hopfield import ContinuousHopfield
+from hopfield import *
 
 import random
 
@@ -75,7 +75,7 @@ def resultsPlotter(original, iterations):
 
 
     plt.tight_layout()
-    plt.savefig("colourResult.png")
+    #plt.savefig("colourResult.png")
     plt.show()
 
 print("Loading Images")
@@ -106,9 +106,9 @@ corrupted2 = [randomFlipping(d, 0.95) for d in band2]
 
 
 
-hoppy0 = ContinuousHopfield(band0)
-hoppy1 = ContinuousHopfield(band1)
-hoppy2 = ContinuousHopfield(band2)
+hoppy0 = ContinuousMeanHopfield(band0)
+hoppy1 = ContinuousMeanHopfield(band1)
+hoppy2 = ContinuousMeanHopfield(band2)
 
 predictions = []
 longest = 1
