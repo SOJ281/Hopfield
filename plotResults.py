@@ -269,7 +269,7 @@ def writeTableToFile(outfile,filenames,Error_levels,param_vals,corruption_levels
     formatted_t = (''.join((str(t.tm_mday),str(t.tm_hour), str(t.tm_min))))
     file=open(outfile+formatted_t+".csv",'x')
     
-    file.write("Corruption_Level,Error_Level"+','.join(labels)+"\n")
+    file.write("Corruption_Level,Error_Level,"+','.join(labels)+"\n")
     for corruption_level in corruption_levels:
         for Error_level in Error_levels:
             critical_nums = [str(val) for val in errorleverMulti(filenames,Error_level,param_vals,corruption_level)]
