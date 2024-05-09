@@ -417,6 +417,10 @@ if __name__ == '__main__':
     To run
     """
     #GeneralErrorstuff(filename="SimplicialHopfield1st",HopfieldType="SimplicialHopfield",nums_neurons=[5,10,15,20],corruption=[0, 10, 10],max_patterns=[5,10,15,20])
-    GeneralErrorstuff(filename="DAMExponential1st",HopfieldType="DAMEXP",nums_neurons=[15],corruption=[0, 10, 10],max_patterns=[5, 160, 5])
+    # GeneralErrorstuff(filename="DAMExponential1st",HopfieldType="DAMEXP",nums_neurons=[15],corruption=[0, 10, 10],max_patterns=[5, 160, 5])
     #GeneralErrorstuff(filename="DAMExponential2nd",HopfieldType="DAMEXP",nums_neurons=[14],corruption=[0, 10, 10],max_patterns=[90,150, 5])
-    GeneralErrorstuff(filename="SimplicialHopfield2nd",HopfieldType="SimplicialHopfield",nums_neurons=[25],corruption=[0, 10, 10],max_patterns=[1, 30, 1])
+    # GeneralErrorstuff(filename="SimplicialHopfield2nd",HopfieldType="SimplicialHopfield",nums_neurons=[25],corruption=[0, 10, 10],max_patterns=[1, 30, 1])
+
+    GeneralErrorstuff(filename="SimplicialHopfield1",HopfieldType="SimplicialHopfield",nums_neurons=[25],corruption=[0, 10, 10],max_patterns=[1, 30, 1])
+    GeneralErrorstuff(filename="SimplicialHopfield2",HopfieldType="SimplicialHopfield",nums_neurons=[15],corruption=[0, 10, 10],max_patterns=[1, 30, 1])
+    GeneralErrorstuff(filename="SimplicialHopfield3",HopfieldType="SimplicialHopfield",nums_neurons=[30],corruption=[0, 10, 10],max_patterns=[1, 30, 1])
