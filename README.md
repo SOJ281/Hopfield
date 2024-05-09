@@ -10,11 +10,17 @@ All test scripts can be run using the following command:
 
 Required modules:
 Numpy
+
 scikit-image
+
 scikit-learn
+
 PIL
+
 matplotlib
+
 scipy
+
 # Documentation:
 ##hopfield.py
 ### Hopfield Class:
