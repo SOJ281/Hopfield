@@ -14,7 +14,7 @@ from skimage.color import rgb2gray
 from skimage.transform import resize
 
 from matplotlib import pyplot as plt
-from hopfield import ContinuousHopfield
+from hopfield import *
 
 import random
 
@@ -101,7 +101,7 @@ def resultsPlotter(original, iterations):
 
 
     plt.tight_layout()
-    plt.savefig("continuousResult.png")
+    #plt.savefig("continuousResult.png")
     plt.show()
 
 
@@ -118,13 +118,15 @@ for file in listdir("distinct"):
 #corrupted = [randomFlipping(d, 0.85) for d in pics]
 corrupted = [highBlocking(d, 0.4) for d in pics]
 
-hoppy = ContinuousHopfield(pics)
+hoppy = ContinuousMeanHopfield(pics)
+#hoppy = ContinuousHopfield(pics)
 
 predictions = []
 for l in range(len(corrupted)):
-    predictions.append(hoppy.predict(corrupted[l], 1))
+#for l in range(1, 5):
+    predictions.append(hoppy.predict(corrupted[l], iterations = 1, beta = 1))
 
     predictions[l] = [reshape(predictions[l][i]) for i in range(len(predictions[l]))]
 
 pics = [reshape(pics[i]) for i in range(len(pics))]
-resultsPlotter(pics, predictions)
+resultsPlotter(pics[:5], predictions[:5])
