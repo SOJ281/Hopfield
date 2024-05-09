@@ -138,8 +138,8 @@ print("Corrupting Images")
 corrupted = [highBlocking(d, 0.4) for d in pics]
            
 #hoppy = Hopfield(pics)
-#hoppy = DAMDiscreteHopfield(pics)
-hoppy = DAMEXP(pics) #Overflow error
+hoppy = DAMDiscreteHopfield(pics, power = 3)
+#hoppy = DAMEXP(pics) #Overflow error
 
 
 predictions = []
